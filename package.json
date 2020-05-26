@@ -1,0 +1,72 @@
+{
+  "name": "mason-app",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "@ant-design/aliyun-theme": "^0.0.4",
+    "@ant-design/icons": "^4.1.0",
+    "@testing-library/jest-dom": "^4.2.4",
+    "@testing-library/react": "^9.3.2",
+    "@testing-library/user-event": "^7.1.2",
+    "@types/jest": "^25.2.3",
+    "@types/node": "^12.0.0",
+    "@types/react": "^16.9.35",
+    "@types/react-dom": "^16.9.8",
+    "@vx/curve": "^0.0.196",
+    "@vx/drag": "^0.0.196",
+    "@vx/event": "^0.0.196",
+    "@vx/gradient": "^0.0.196",
+    "@vx/group": "^0.0.196",
+    "@vx/hierarchy": "^0.0.196",
+    "@vx/shape": "^0.0.196",
+    "@vx/zoom": "^0.0.196",
+    "antd": "^4.2.4",
+    "axios": "^0.19.2",
+    "d3-hierarchy": "^1.1.9",
+    "google-protobuf": "^3.12.0",
+    "lodash": "^4.17.15",
+    "react": "^16.13.1",
+    "react-dnd": "^10.0.2",
+    "react-dnd-html5-backend": "^10.0.2",
+    "react-dom": "^16.13.1",
+    "react-intl": "^4.5.5",
+    "react-redux": "^7.2.0",
+    "react-scripts": "3.4.1",
+    "react-virtualized": "^9.21.2",
+    "redux": "^4.0.5",
+    "redux-devtools-extension": "^2.13.8",
+    "redux-saga": "^1.1.3",
+    "reselect": "^4.0.0",
+    "typescript": "~3.7.2",
+    "uuid": "^8.1.0"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "devDependencies": {
+    "@types/google-protobuf": "^3.7.2",
+    "@types/lodash": "^4.14.152",
+    "@types/react-redux": "^7.1.8",
+    "@types/react-virtualized": "^9.21.10",
+    "@types/uuid": "^8.0.0",
+    "@typescript-eslint/eslint-plugin": "^2.34.0",
+    "eslint-config-airbnb": "^18.1.0",
+    "eslint-config-react-app": "^5.2.1",
+    "ts-proto": "^1.20.2"
+  }
+}
