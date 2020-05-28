@@ -2,7 +2,7 @@
 import { Writer, Reader } from 'protobufjs/minimal';
 
 
-export interface Port {
+export interface PortSchema {
   name: string;
   type: string;
   direction: string;
@@ -12,15 +12,15 @@ export interface Port {
   default: string;
 }
 
-export interface Node {
+export interface NodeSchema {
   group: string;
   name: string;
-  ports: Port[];
+  ports: PortSchema[];
   signals: string[];
   slots: string[];
 }
 
-export interface Blueprint {
+export interface BlueprintSchema {
   group: string;
   name: string;
   signals: string[];
@@ -28,11 +28,11 @@ export interface Blueprint {
 }
 
 export interface Library {
-  nodes: Node[];
-  blueprints: Blueprint[];
+  nodes: NodeSchema[];
+  blueprints: BlueprintSchema[];
 }
 
-const basePort: object = {
+const basePortSchema: object = {
   name: "",
   type: "",
   direction: "",
@@ -42,7 +42,7 @@ const basePort: object = {
   default: "",
 };
 
-const baseNode: object = {
+const baseNodeSchema: object = {
   group: "",
   name: "",
   ports: undefined,
@@ -50,7 +50,7 @@ const baseNode: object = {
   slots: "",
 };
 
-const baseBlueprint: object = {
+const baseBlueprintSchema: object = {
   group: "",
   name: "",
   signals: "",
@@ -62,8 +62,8 @@ const baseLibrary: object = {
   blueprints: undefined,
 };
 
-export const Port = {
-  encode(message: Port, writer: Writer = Writer.create()): Writer {
+export const PortSchema = {
+  encode(message: PortSchema, writer: Writer = Writer.create()): Writer {
     writer.uint32(10).string(message.name);
     writer.uint32(18).string(message.type);
     writer.uint32(26).string(message.direction);
@@ -75,9 +75,9 @@ export const Port = {
     writer.uint32(58).string(message.default);
     return writer;
   },
-  decode(reader: Reader, length?: number): Port {
+  decode(reader: Reader, length?: number): PortSchema {
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = Object.create(basePort) as Port;
+    const message = Object.create(basePortSchema) as PortSchema;
     message.choices = [];
     while (reader.pos < end) {
       const tag = reader.uint32();
@@ -110,8 +110,8 @@ export const Port = {
     }
     return message;
   },
-  fromJSON(object: any): Port {
-    const message = Object.create(basePort) as Port;
+  fromJSON(object: any): PortSchema {
+    const message = Object.create(basePortSchema) as PortSchema;
     message.choices = [];
     if (object.name !== undefined && object.name !== null) {
       message.name = String(object.name);
@@ -150,8 +150,8 @@ export const Port = {
     }
     return message;
   },
-  fromPartial(object: DeepPartial<Port>): Port {
-    const message = Object.create(basePort) as Port;
+  fromPartial(object: DeepPartial<PortSchema>): PortSchema {
+    const message = Object.create(basePortSchema) as PortSchema;
     message.choices = [];
     if (object.name !== undefined && object.name !== null) {
       message.name = object.name;
@@ -190,7 +190,7 @@ export const Port = {
     }
     return message;
   },
-  toJSON(message: Port): unknown {
+  toJSON(message: PortSchema): unknown {
     const obj: any = {};
     obj.name = message.name || "";
     obj.type = message.type || "";
@@ -207,12 +207,12 @@ export const Port = {
   },
 };
 
-export const Node = {
-  encode(message: Node, writer: Writer = Writer.create()): Writer {
+export const NodeSchema = {
+  encode(message: NodeSchema, writer: Writer = Writer.create()): Writer {
     writer.uint32(10).string(message.group);
     writer.uint32(18).string(message.name);
     for (const v of message.ports) {
-      Port.encode(v!, writer.uint32(26).fork()).ldelim();
+      PortSchema.encode(v!, writer.uint32(26).fork()).ldelim();
     }
     for (const v of message.signals) {
       writer.uint32(34).string(v!);
@@ -222,9 +222,9 @@ export const Node = {
     }
     return writer;
   },
-  decode(reader: Reader, length?: number): Node {
+  decode(reader: Reader, length?: number): NodeSchema {
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = Object.create(baseNode) as Node;
+    const message = Object.create(baseNodeSchema) as NodeSchema;
     message.ports = [];
     message.signals = [];
     message.slots = [];
@@ -238,7 +238,7 @@ export const Node = {
           message.name = reader.string();
           break;
         case 3:
-          message.ports.push(Port.decode(reader, reader.uint32()));
+          message.ports.push(PortSchema.decode(reader, reader.uint32()));
           break;
         case 4:
           message.signals.push(reader.string());
@@ -253,8 +253,8 @@ export const Node = {
     }
     return message;
   },
-  fromJSON(object: any): Node {
-    const message = Object.create(baseNode) as Node;
+  fromJSON(object: any): NodeSchema {
+    const message = Object.create(baseNodeSchema) as NodeSchema;
     message.ports = [];
     message.signals = [];
     message.slots = [];
@@ -270,7 +270,7 @@ export const Node = {
     }
     if (object.ports !== undefined && object.ports !== null) {
       for (const e of object.ports) {
-        message.ports.push(Port.fromJSON(e));
+        message.ports.push(PortSchema.fromJSON(e));
       }
     }
     if (object.signals !== undefined && object.signals !== null) {
@@ -285,8 +285,8 @@ export const Node = {
     }
     return message;
   },
-  fromPartial(object: DeepPartial<Node>): Node {
-    const message = Object.create(baseNode) as Node;
+  fromPartial(object: DeepPartial<NodeSchema>): NodeSchema {
+    const message = Object.create(baseNodeSchema) as NodeSchema;
     message.ports = [];
     message.signals = [];
     message.slots = [];
@@ -302,7 +302,7 @@ export const Node = {
     }
     if (object.ports !== undefined && object.ports !== null) {
       for (const e of object.ports) {
-        message.ports.push(Port.fromPartial(e));
+        message.ports.push(PortSchema.fromPartial(e));
       }
     }
     if (object.signals !== undefined && object.signals !== null) {
@@ -317,12 +317,12 @@ export const Node = {
     }
     return message;
   },
-  toJSON(message: Node): unknown {
+  toJSON(message: NodeSchema): unknown {
     const obj: any = {};
     obj.group = message.group || "";
     obj.name = message.name || "";
     if (message.ports) {
-      obj.ports = message.ports.map(e => e ? Port.toJSON(e) : undefined);
+      obj.ports = message.ports.map(e => e ? PortSchema.toJSON(e) : undefined);
     } else {
       obj.ports = [];
     }
@@ -340,8 +340,8 @@ export const Node = {
   },
 };
 
-export const Blueprint = {
-  encode(message: Blueprint, writer: Writer = Writer.create()): Writer {
+export const BlueprintSchema = {
+  encode(message: BlueprintSchema, writer: Writer = Writer.create()): Writer {
     writer.uint32(10).string(message.group);
     writer.uint32(18).string(message.name);
     for (const v of message.signals) {
@@ -352,9 +352,9 @@ export const Blueprint = {
     }
     return writer;
   },
-  decode(reader: Reader, length?: number): Blueprint {
+  decode(reader: Reader, length?: number): BlueprintSchema {
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = Object.create(baseBlueprint) as Blueprint;
+    const message = Object.create(baseBlueprintSchema) as BlueprintSchema;
     message.signals = [];
     message.slots = [];
     while (reader.pos < end) {
@@ -379,8 +379,8 @@ export const Blueprint = {
     }
     return message;
   },
-  fromJSON(object: any): Blueprint {
-    const message = Object.create(baseBlueprint) as Blueprint;
+  fromJSON(object: any): BlueprintSchema {
+    const message = Object.create(baseBlueprintSchema) as BlueprintSchema;
     message.signals = [];
     message.slots = [];
     if (object.group !== undefined && object.group !== null) {
@@ -405,8 +405,8 @@ export const Blueprint = {
     }
     return message;
   },
-  fromPartial(object: DeepPartial<Blueprint>): Blueprint {
-    const message = Object.create(baseBlueprint) as Blueprint;
+  fromPartial(object: DeepPartial<BlueprintSchema>): BlueprintSchema {
+    const message = Object.create(baseBlueprintSchema) as BlueprintSchema;
     message.signals = [];
     message.slots = [];
     if (object.group !== undefined && object.group !== null) {
@@ -431,7 +431,7 @@ export const Blueprint = {
     }
     return message;
   },
-  toJSON(message: Blueprint): unknown {
+  toJSON(message: BlueprintSchema): unknown {
     const obj: any = {};
     obj.group = message.group || "";
     obj.name = message.name || "";
@@ -452,10 +452,10 @@ export const Blueprint = {
 export const Library = {
   encode(message: Library, writer: Writer = Writer.create()): Writer {
     for (const v of message.nodes) {
-      Node.encode(v!, writer.uint32(10).fork()).ldelim();
+      NodeSchema.encode(v!, writer.uint32(10).fork()).ldelim();
     }
     for (const v of message.blueprints) {
-      Blueprint.encode(v!, writer.uint32(18).fork()).ldelim();
+      BlueprintSchema.encode(v!, writer.uint32(18).fork()).ldelim();
     }
     return writer;
   },
@@ -468,10 +468,10 @@ export const Library = {
       const tag = reader.uint32();
       switch (tag >>> 3) {
         case 1:
-          message.nodes.push(Node.decode(reader, reader.uint32()));
+          message.nodes.push(NodeSchema.decode(reader, reader.uint32()));
           break;
         case 2:
-          message.blueprints.push(Blueprint.decode(reader, reader.uint32()));
+          message.blueprints.push(BlueprintSchema.decode(reader, reader.uint32()));
           break;
         default:
           reader.skipType(tag & 7);
@@ -486,12 +486,12 @@ export const Library = {
     message.blueprints = [];
     if (object.nodes !== undefined && object.nodes !== null) {
       for (const e of object.nodes) {
-        message.nodes.push(Node.fromJSON(e));
+        message.nodes.push(NodeSchema.fromJSON(e));
       }
     }
     if (object.blueprints !== undefined && object.blueprints !== null) {
       for (const e of object.blueprints) {
-        message.blueprints.push(Blueprint.fromJSON(e));
+        message.blueprints.push(BlueprintSchema.fromJSON(e));
       }
     }
     return message;
@@ -502,12 +502,12 @@ export const Library = {
     message.blueprints = [];
     if (object.nodes !== undefined && object.nodes !== null) {
       for (const e of object.nodes) {
-        message.nodes.push(Node.fromPartial(e));
+        message.nodes.push(NodeSchema.fromPartial(e));
       }
     }
     if (object.blueprints !== undefined && object.blueprints !== null) {
       for (const e of object.blueprints) {
-        message.blueprints.push(Blueprint.fromPartial(e));
+        message.blueprints.push(BlueprintSchema.fromPartial(e));
       }
     }
     return message;
@@ -515,12 +515,12 @@ export const Library = {
   toJSON(message: Library): unknown {
     const obj: any = {};
     if (message.nodes) {
-      obj.nodes = message.nodes.map(e => e ? Node.toJSON(e) : undefined);
+      obj.nodes = message.nodes.map(e => e ? NodeSchema.toJSON(e) : undefined);
     } else {
       obj.nodes = [];
     }
     if (message.blueprints) {
-      obj.blueprints = message.blueprints.map(e => e ? Blueprint.toJSON(e) : undefined);
+      obj.blueprints = message.blueprints.map(e => e ? BlueprintSchema.toJSON(e) : undefined);
     } else {
       obj.blueprints = [];
     }

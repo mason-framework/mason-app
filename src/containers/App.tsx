@@ -1,7 +1,7 @@
 import { connect } from 'react-redux'
 import { createStructuredSelector } from 'reselect'
 import { IntlProvider } from 'react-intl'
-import { Layout } from 'antd'
+import { Drawer, Layout } from 'antd'
 import React, { Component } from 'react'
 import { DndProvider } from 'react-dnd'
 import DndBackend from 'react-dnd-html5-backend'
@@ -9,15 +9,19 @@ import DndBackend from 'react-dnd-html5-backend'
 import { getLocale, getMessages } from 'store/app/selectors'
 import { initialize as initializeApp } from 'store/app/actions'
 import { ReduxState } from 'store/types'
-import GraphView from 'containers/GraphView'
-import NodeView from 'containers/NodeView'
 
-const { Header, Sider, Content } = Layout
+import BlueprintNavBar from 'containers/BlueprintNavBar'
+import MenuBar from 'containers/MenuBar'
+import GraphView from 'containers/GraphView'
+import LibraryView from 'containers/LibraryView'
+import NodeForm from 'containers/NodeForm'
+
+const { Sider, Content } = Layout
 
 
 interface Props {
-  locale: string,
-  messages: Record<string, string>,
+  locale: string
+  messages: Record<string, string>
 }
 
 interface Actions {
@@ -41,16 +45,21 @@ class App extends Component<Props & Actions> {
       >
         <DndProvider backend={DndBackend}>
           <Layout style={{ height: '100vh' }}>
-            <Header />
+            <MenuBar />
             <Layout>
-              <Sider>
-                <NodeView />
+              <Sider collapsible collapsedWidth={0}>
+                <LibraryView />
               </Sider>
               <Content>
+                <BlueprintNavBar />
                 <GraphView />
               </Content>
+              <Sider collapsible collapsedWidth={0} reverseArrow width={350}>
+                <NodeForm />
+              </Sider>
             </Layout>
           </Layout>
+          <Drawer visible={false} placement="bottom" mask={false} />
         </DndProvider>
       </IntlProvider>
     )

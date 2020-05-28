@@ -11,7 +11,7 @@ interface Props {
   connections: Array<GraphConnection>
   isConnecting: boolean
   nodes: Array<GraphNode>
-  selectedNodeId: string
+  selection: Array<string>
 }
 
 interface Dimensions {
@@ -20,11 +20,14 @@ interface Dimensions {
 }
 
 interface Actions {
-  onConnectionEnd: any
-  onConnectionMove: any
-  onConnectionStart: any
-  onNodeDrag: any
-  onNodeDragStart: any
+  onClearSelection(): void
+  onConnectionEnd(): void
+  onConnectionMove(dx: number, dy: number): void
+  onConnectionStart(connection: GraphConnection): void
+  onNodeDrag(uid: string, dx: number, dy: number): void
+  onNodeDragEnd(uid: string): void
+  onNodeDragStart(uid: string): void
+  onSelect(uid: string): void
 }
 
 const GraphLayout = ({
@@ -36,33 +39,26 @@ const GraphLayout = ({
   onConnectionStart,
   onNodeDrag,
   onNodeDragStart,
-  selectedNodeId,
+  onNodeDragEnd,
+  onSelect,
+  selection,
 }: Props & Actions) => (
   <>
-    {connections.map(({
-      source,
-      sourceOffsetX,
-      sourceOffsetY,
-      sourceX,
-      sourceY,
-      target,
-      targetOffsetX,
-      targetOffsetY,
-      targetX,
-      targetY,
-    }) => (
-      <GraphConnectionItem
-        key={`${source}-${target}`}
-        sourceOffsetX={sourceOffsetX || 0}
-        sourceOffsetY={sourceOffsetY || 0}
-        sourceX={sourceX || 0}
-        sourceY={sourceY || 0}
-        targetOffsetX={targetOffsetX || 0}
-        targetOffsetY={targetOffsetY || 0}
-        targetX={targetX || 0}
-        targetY={targetY || 0}
-      />
-    ))}
+    {connections.map((conn) => {
+      const uid = `${conn.source}--${conn.target}`
+      return (
+        <GraphConnectionItem
+          key={uid}
+          uid={uid}
+          onSelect={onSelect}
+          sourcePos={conn.sourcePos}
+          targetPos={conn.targetPos}
+          sourcePlacement={conn.sourcePlacement}
+          targetPlacement={conn.targetPlacement}
+          selected={selection.includes(uid)}
+        />
+      )
+    })}
     {nodes.map((node) => (
       <GraphNodeItem
         height={node.height}
@@ -74,8 +70,9 @@ const GraphLayout = ({
         onConnectionStart={onConnectionStart}
         onDrag={onNodeDrag}
         onDragStart={onNodeDragStart}
-        selected={node.uid === selectedNodeId}
-        title={node.title}
+        onDragEnd={onNodeDragEnd}
+        selected={selection.includes(node.uid)}
+        label={node.label}
         uid={node.uid}
         width={node.width}
         x={node.x}
@@ -93,9 +90,12 @@ const Graph = ({
   onConnectionEnd,
   onConnectionStart,
   onConnectionMove,
+  onClearSelection,
   onNodeDrag,
   onNodeDragStart,
-  selectedNodeId,
+  onNodeDragEnd,
+  onSelect,
+  selection,
   width,
 }: Dimensions & Props & Actions) => (
   <Zoom
@@ -123,9 +123,13 @@ const Graph = ({
           onWheel={handleWheel}
           onMouseDown={dragStart}
           onMouseMove={dragMove}
-          onMouseUp={dragEnd}
+          onMouseUp={() => {
+            onClearSelection()
+            dragEnd()
+          }}
           onMouseLeave={() => {
             if (!isDragging) return
+            onClearSelection()
             dragEnd()
           }}
           onDoubleClick={(event) => {
@@ -138,12 +142,15 @@ const Graph = ({
             connections={connections}
             isConnecting={isConnecting}
             nodes={nodes}
+            onClearSelection={onClearSelection}
             onConnectionEnd={onConnectionEnd}
             onConnectionStart={onConnectionStart}
             onConnectionMove={onConnectionMove}
             onNodeDrag={onNodeDrag}
             onNodeDragStart={onNodeDragStart}
-            selectedNodeId={selectedNodeId}
+            onNodeDragEnd={onNodeDragEnd}
+            onSelect={onSelect}
+            selection={selection}
           />
         </g>
       </svg>

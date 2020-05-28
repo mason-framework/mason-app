@@ -12,6 +12,13 @@ import {
 
 import GraphHotspotItem from 'components/GraphHotspotItem'
 
+const FLIP_PLACEMENT: Record<string, string> = {
+  left: 'right',
+  right: 'left',
+  top: 'bottom',
+  bottom: 'top',
+}
+
 interface Props {
   dragHeight?: number
   dragWidth?: number
@@ -23,15 +30,16 @@ interface Props {
   width: number
   x: number
   y: number
-  title: string
+  label: string
 }
 
 interface Actions {
-  onConnectionStart(connection: GraphConnection): any
-  onConnectionMove(dx: number, dy: number): any
-  onConnectionEnd(): any
-  onDragStart(uid: string): any
-  onDrag(uid: string, dx: number, dy: number): any
+  onConnectionEnd(): void
+  onConnectionMove(dx: number, dy: number): void
+  onConnectionStart(connection: GraphConnection): void
+  onDrag(uid: string, dx: number, dy: number): void
+  onDragEnd(uid: string): void
+  onDragStart(uid: string): void
 }
 
 const GraphNodeItem = ({
@@ -45,8 +53,9 @@ const GraphNodeItem = ({
   onConnectionStart,
   onDrag,
   onDragStart,
+  onDragEnd,
   selected,
-  title,
+  label,
   uid,
   width,
   x,
@@ -57,6 +66,8 @@ const GraphNodeItem = ({
     height={dragHeight}
     onDragStart={() => onDragStart(uid)}
     onDragMove={({ dx, dy }) => onDrag(uid, dx, dy)}
+    onDragEnd={() => onDragEnd(uid)}
+    resetOnStart
   >
     {({
       dragStart,
@@ -67,14 +78,18 @@ const GraphNodeItem = ({
       dy,
     }) => {
       let stroke = COLORS_DEFAULT_STROKE
+      let nodeX = x
+      let nodeY = y
       if (isDragging) {
         stroke = COLORS_DRAG_STROKE
+        nodeX += dx
+        nodeY += dy
       } else if (selected) {
         stroke = COLORS_SELECTED_STROKE
       }
       return (
         <>
-          <g transform={`translate(${x + dx}, ${y + dy})`}>
+          <g transform={`translate(${nodeX}, ${nodeY})`}>
             <rect
               rx={6}
               width={width}
@@ -97,23 +112,29 @@ const GraphNodeItem = ({
               fontSize={12}
               style={{ pointerEvents: 'none', userSelect: 'none' }}
             >
-              {title}
+              {label}
             </text>
           </g>
 
           {hotspots.map((hotspot) => {
-            const isSource = hotspot.direction === 'output'
+            const isSource = hotspot.offsetX !== 1
             const createConnection = (): GraphConnection => ({
               source: isSource ? hotspot.uid : '',
-              sourceX: x + dx + (isSource ? 0 : hotspot.offsetX),
-              sourceY: y + dy + (isSource ? 0 : hotspot.offsetY),
-              sourceOffsetX: isSource ? hotspot.offsetX : 0,
-              sourceOffsetY: isSource ? hotspot.offsetY : 0,
               target: isSource ? '' : hotspot.uid,
-              targetX: x + dx + (isSource ? hotspot.offsetX : 0),
-              targetY: y + dy + (isSource ? hotspot.offsetY : 0),
-              targetOffsetX: isSource ? 0 : hotspot.offsetX,
-              targetOffsetY: isSource ? 0 : hotspot.offsetY,
+              sourcePlacement: isSource ? hotspot.placement : FLIP_PLACEMENT[hotspot.placement],
+              sourcePos: {
+                x: nodeX + (isSource ? 0 : hotspot.offsetX),
+                y: nodeY + (isSource ? 0 : hotspot.offsetY),
+                offsetX: isSource ? hotspot.offsetX : 0,
+                offsetY: isSource ? hotspot.offsetY : 0,
+              },
+              targetPos: {
+                x: nodeX + (isSource ? hotspot.offsetX : 0),
+                y: nodeY + (isSource ? hotspot.offsetY : 0),
+                offsetX: isSource ? 0 : hotspot.offsetX,
+                offsetY: isSource ? 0 : hotspot.offsetY,
+              },
+              targetPlacement: isSource ? FLIP_PLACEMENT[hotspot.placement] : hotspot.placement,
             })
             return (
               <GraphHotspotItem
@@ -125,7 +146,7 @@ const GraphNodeItem = ({
                 onConnectionMove={onConnectionMove}
                 stroke={stroke}
                 title={hotspot.title || ''}
-                transform={`translate(${x + dx}, ${y + dy})`}
+                transform={`translate(${nodeX}, ${nodeY})`}
                 x={hotspot.offsetX}
                 y={hotspot.offsetY}
               />

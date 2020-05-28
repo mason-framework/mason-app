@@ -3,18 +3,18 @@ import { composeWithDevTools } from 'redux-devtools-extension'
 import createSagaMiddleware from 'redux-saga'
 
 import { appReducer } from 'store/app/reducers'
+import { blueprintReducer } from 'store/blueprint/reducers'
+import { blueprintSaga } from 'store/blueprint/sagas'
 import { graphReducer } from 'store/graph/reducers'
 import { graphSaga } from 'store/graph/sagas'
-import { serverReducer } from 'store/server/reducers'
-import { serverSaga } from 'store/server/sagas'
-import { treeReducer } from 'store/tree/reducers'
-
+import { libraryReducer } from 'store/library/reducers'
+import { librarySaga } from 'store/library/sagas'
 
 const reducers = combineReducers({
   app: appReducer,
+  blueprint: blueprintReducer,
   graph: graphReducer,
-  server: serverReducer,
-  tree: treeReducer,
+  library: libraryReducer,
 })
 
 const sagaMiddleware = createSagaMiddleware();
@@ -23,7 +23,8 @@ const store = createStore(
   composeWithDevTools(applyMiddleware(sagaMiddleware)),
 )
 
-sagaMiddleware.run(serverSaga)
+sagaMiddleware.run(librarySaga)
+sagaMiddleware.run(blueprintSaga)
 sagaMiddleware.run(graphSaga)
 
 export default store

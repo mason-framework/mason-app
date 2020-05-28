@@ -1,6 +1,6 @@
 import axios from 'axios'
-import { Library as _Library } from 'store/server/proto/library'
-import { Library } from 'store/server/types'
+import { Library as _Library } from 'store/library/proto/library'
+import { Library } from 'store/library/types'
 
 
 export async function getLibrary(baseUrl: string): Promise<Library> {

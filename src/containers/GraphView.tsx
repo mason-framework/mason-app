@@ -6,20 +6,26 @@ import { createStructuredSelector } from 'reselect'
 import { useDrop } from 'react-dnd'
 
 import Graph from 'components/Graph'
-import { LIBRARY_NODE_DRAGGED, LibraryNodeDraggedAction } from 'store/tree/types'
 import {
-  dropLibraryNode,
-  moveGraphNode,
-  selectGraphNode,
-  startConnection,
-  moveConnection,
-  stopConnection,
+  LIBRARY_NODE_DRAGGED,
+  DragNodeSchemaAction,
+  NodeSchema,
+} from 'store/library/types'
+import {
+  dropNodeSchema,
+  clearSelection,
+  finishMoveNode,
+  moveNode,
+  addSelection,
+  startConnector,
+  moveConnector,
+  stopConnector,
 } from 'store/graph/actions'
 import {
-  getConnections,
+  getMappedConnections,
   getIsConnecting,
   getNodes,
-  getSelectedNodeId,
+  getSelection,
 } from 'store/graph/selectors'
 import { GraphNode, GraphConnection } from 'store/graph/types'
 import { ReduxState } from 'store/types'
@@ -28,16 +34,19 @@ interface Props {
   isConnecting: boolean
   nodes: Array<GraphNode>
   connections: Array<GraphConnection>
-  selectedNodeId: string
+  selection: Array<string>
 }
 
 interface Actions {
-  onConnectionStart: typeof startConnection
-  onConnectionMove: typeof moveConnection
-  onConnectionEnd: typeof stopConnection
-  onLibraryNodeDrop: typeof dropLibraryNode
-  onNodeDrag: typeof moveGraphNode
-  onNodeDragStart: typeof selectGraphNode
+  onClearSelection(): void
+  onConnectionEnd(): void
+  onConnectionMove(dx: number, dy: number): void
+  onConnectionStart(connection: GraphConnection): void
+  onDropNodeSchema(nodeSchema: NodeSchema, x: number, y: number): void
+  onNodeDrag(uid: string, dx: number, dy: number): void
+  onNodeDragEnd(uid: string): void
+  onNodeDragStart(uid: string): void
+  onSelect(uid: string): void
 }
 
 const GraphView = ({
@@ -47,14 +56,17 @@ const GraphView = ({
   onConnectionEnd,
   onConnectionMove,
   onConnectionStart,
-  onLibraryNodeDrop,
+  onClearSelection,
+  onDropNodeSchema,
   onNodeDrag,
   onNodeDragStart,
-  selectedNodeId,
+  onNodeDragEnd,
+  onSelect,
+  selection,
 }: Props & Actions) => {
   const dropInfo = useDrop({
     accept: LIBRARY_NODE_DRAGGED,
-    drop: ({ nodeType }: LibraryNodeDraggedAction, monitor: any) => {
+    drop: ({ node }: DragNodeSchemaAction, monitor: any) => {
       const { x, y } = monitor.getClientOffset()
       const graphElement = document.getElementById('graph')
       const { top, left } = (
@@ -62,7 +74,7 @@ const GraphView = ({
           ? graphElement.getBoundingClientRect()
           : { top: 0, left: 0 }
       )
-      onLibraryNodeDrop(nodeType, x - left, y - top)
+      onDropNodeSchema(node, x - left, y - top)
     },
   })
   return (
@@ -71,7 +83,8 @@ const GraphView = ({
         <div
           id="graph"
           style={{
-            border: '1px solid #0c0c0c',
+            borderLeft: '1px solid #0c0c0c',
+            borderRight: '1px solid #0c0c0c',
             height,
             overflow: 'hidden',
             width,
@@ -86,9 +99,12 @@ const GraphView = ({
             onConnectionEnd={onConnectionEnd}
             onConnectionMove={onConnectionMove}
             onConnectionStart={onConnectionStart}
+            onClearSelection={onClearSelection}
             onNodeDrag={onNodeDrag}
             onNodeDragStart={onNodeDragStart}
-            selectedNodeId={selectedNodeId}
+            onNodeDragEnd={onNodeDragEnd}
+            onSelect={onSelect}
+            selection={selection}
             width={10000}
           />
         </div>
@@ -98,19 +114,22 @@ const GraphView = ({
 }
 
 const selector = createStructuredSelector<ReduxState, Props>({
-  connections: getConnections,
+  connections: getMappedConnections,
   isConnecting: getIsConnecting,
   nodes: getNodes,
-  selectedNodeId: getSelectedNodeId,
+  selection: getSelection,
 })
 
 const actions = {
-  onConnectionStart: startConnection,
-  onConnectionEnd: stopConnection,
-  onConnectionMove: moveConnection,
-  onLibraryNodeDrop: dropLibraryNode,
-  onNodeDrag: moveGraphNode,
-  onNodeDragStart: selectGraphNode,
+  onConnectionStart: startConnector,
+  onConnectionEnd: stopConnector,
+  onConnectionMove: moveConnector,
+  onClearSelection: clearSelection,
+  onDropNodeSchema: dropNodeSchema,
+  onNodeDrag: moveNode,
+  onNodeDragStart: addSelection,
+  onNodeDragEnd: finishMoveNode,
+  onSelect: addSelection,
 }
 
 export default connect(selector, actions)(GraphView);

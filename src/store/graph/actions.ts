@@ -1,64 +1,97 @@
 import {
   CONNECTION_ADDED,
-  CONNECTION_CLEARED,
-  CONNECTION_STARTED,
-  CONNECTION_STOPPED,
-  CONNECTION_MOVED,
-  GRAPH_NODE_DROPPED,
-  GRAPH_NODE_MOVED,
-  GRAPH_NODE_SELECTED,
-  LIBRARY_NODE_DROPPED,
-  GraphConnection,
+  CONNECTION_DELETED,
+  CONNECTOR_FINISHED,
+  CONNECTOR_MOVED,
+  CONNECTOR_STARTED,
+  CONNECTOR_STOPPED,
+  GRAPH_CLEARED,
+  NODE_ADDED,
+  NODE_DELETED,
+  NODE_MOVE_FINISHED,
+  NODE_MOVED,
+  NODE_SCHEMA_DROPPED,
+  SELECTION_CLEARED,
+  SELECTION_DELETED,
+  SELECTION_ADDED,
   GraphAction,
+  GraphConnection,
+  GraphNode,
 } from 'store/graph/types'
-import { LibraryNode } from 'store/server/types'
+import { NodeSchema } from 'store/library/types'
 
 export const addConnection = (connection: GraphConnection): GraphAction => ({
   type: CONNECTION_ADDED,
   connection,
 })
 
-export const clearConnection = (): GraphAction => ({
-  type: CONNECTION_CLEARED,
+export const addNode = (node: GraphNode): GraphAction => ({
+  type: NODE_ADDED,
+  node,
 })
 
-export const startConnection = (connection: GraphConnection): GraphAction => ({
-  type: CONNECTION_STARTED,
-  connection,
+export const clearGraph = (): GraphAction => ({
+  type: GRAPH_CLEARED,
 })
 
-export const stopConnection = (): GraphAction => ({
-  type: CONNECTION_STOPPED,
+export const clearSelection = (): GraphAction => ({
+  type: SELECTION_CLEARED,
 })
 
-export const moveConnection = (dx: number, dy: number): GraphAction => ({
-  type: CONNECTION_MOVED,
+export const deleteConnection = (source: string, target: string): GraphAction => ({
+  type: CONNECTION_DELETED,
+  source,
+  target,
+})
+
+export const deleteNode = (uid: string): GraphAction => ({
+  type: NODE_DELETED,
+  uid,
+})
+
+export const deleteSelection = (): GraphAction => ({
+  type: SELECTION_DELETED,
+})
+
+export const finishConnector = (): GraphAction => ({
+  type: CONNECTOR_FINISHED,
+})
+
+export const moveConnector = (dx: number, dy: number): GraphAction => ({
+  type: CONNECTOR_MOVED,
   dx,
   dy,
 })
 
-export const dropGraphNode = (nodeType: string, x: number, y: number): GraphAction => ({
-  type: GRAPH_NODE_DROPPED,
-  nodeType,
-  x,
-  y,
+export const startConnector = (connector: GraphConnection): GraphAction => ({
+  type: CONNECTOR_STARTED,
+  connector,
 })
 
-export const moveGraphNode = (uid: string, dx: number, dy: number): GraphAction => ({
-  type: GRAPH_NODE_MOVED,
+export const stopConnector = (): GraphAction => ({
+  type: CONNECTOR_STOPPED,
+})
+
+export const finishMoveNode = (uid: string): GraphAction => ({
+  type: NODE_MOVE_FINISHED,
+  uid,
+})
+
+export const moveNode = (uid: string, dx: number, dy: number): GraphAction => ({
+  type: NODE_MOVED,
   uid,
   dx,
   dy,
 })
 
-export const selectGraphNode = (uid: string): GraphAction => ({
-  type: GRAPH_NODE_SELECTED,
+export const addSelection = (uid: string): GraphAction => ({
+  type: SELECTION_ADDED,
   uid,
 })
 
-export const dropLibraryNode = (nodeType: LibraryNode, x: number, y: number): GraphAction => ({
-  type: LIBRARY_NODE_DROPPED,
-  nodeType,
+export const dropNodeSchema = (nodeSchema: NodeSchema, x: number, y: number): GraphAction => ({
+  type: NODE_SCHEMA_DROPPED,
+  nodeSchema,
   x,
   y,
 })
