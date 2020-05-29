@@ -3,14 +3,15 @@ import React from 'react'
 import { localPoint } from '@vx/event'
 import { Zoom } from '@vx/zoom'
 
-import { GraphNode, GraphConnection, COLORS_BG } from 'store/graph/types'
+import { COLOR_BG } from 'store/graph/colors'
+import { Node, Connection, Hotspot } from 'store/blueprint/types'
 import GraphNodeItem from 'components/GraphNodeItem'
 import GraphConnectionItem from 'components/GraphConnectionItem'
 
 interface Props {
-  connections: Array<GraphConnection>
+  connections: Array<Connection>
   isConnecting: boolean
-  nodes: Array<GraphNode>
+  nodes: Array<Node>
   selection: Array<string>
 }
 
@@ -23,7 +24,7 @@ interface Actions {
   onClearSelection(): void
   onConnectionEnd(): void
   onConnectionMove(dx: number, dy: number): void
-  onConnectionStart(connection: GraphConnection): void
+  onConnectionStart(hotspot: Hotspot, x: number, y: number): void
   onNodeDrag(uid: string, dx: number, dy: number): void
   onNodeDragEnd(uid: string): void
   onNodeDragStart(uid: string): void
@@ -45,7 +46,7 @@ const GraphLayout = ({
 }: Props & Actions) => (
   <>
     {connections.map((conn) => {
-      const uid = `${conn.source}--${conn.target}`
+      const uid = `${conn.sourceNodeId}.${conn.sourceName}--${conn.targetNodeId}.${conn.targetName}`
       return (
         <GraphConnectionItem
           key={uid}
@@ -119,7 +120,7 @@ const Graph = ({
         <rect
           width={width}
           height={height}
-          fill={COLORS_BG}
+          fill={COLOR_BG}
           onWheel={handleWheel}
           onMouseDown={dragStart}
           onMouseMove={dragMove}

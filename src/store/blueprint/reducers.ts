@@ -1,63 +1,89 @@
-import { v4 as uuid4 } from 'uuid'
 import {
-  BLUEPRINT_INITIALIZED,
+  CONNECTION_ADDED,
+  CONNECTION_DELETED,
+  INITIALIZED,
   NODE_ADDED,
+  NODE_CHANGED,
   NODE_DELETED,
-  NODE_PROPERTY_CHANGED,
-  PORT_VALUE_CHANGED,
+  PORT_CHANGED,
+  SELECTION_ADDED,
+  SELECTION_CLEARED,
   BlueprintAction,
   BlueprintState,
+  Node,
+  createBlueprint,
+  createBlueprintState,
 } from 'store/blueprint/types'
 
+const initialState: BlueprintState = createBlueprintState()
 
-const initialState: BlueprintState = {
-  blueprints: {},
-  nodes: {},
-  currentBlueprintId: '',
+
+function changePort(node: Node, name: string, properties: Record<string, any>): Node {
+  const port = node.ports[name]
+  if (port) {
+    return {
+      ...node,
+      ports: {
+        ...node.ports,
+        [name]: {
+          ...port,
+          ...properties,
+        },
+      },
+    }
+  }
+  return node
 }
+
 
 export function blueprintReducer(
   state = initialState,
   action: BlueprintAction,
 ): BlueprintState {
   switch (action.type) {
-    case BLUEPRINT_INITIALIZED: {
-      const blueprint = {
-        label: 'Untitled',
-        type: 'node.Blueprint',
-        uid: uuid4(),
-      }
+    case CONNECTION_ADDED: {
+      const { connection } = action
+      return { ...state, connections: [...state.connections, connection] }
+    }
+    case CONNECTION_DELETED: {
+      const {
+        sourceNodeId,
+        sourceName,
+        targetNodeId,
+        targetName,
+      } = action
       return {
-        nodes: {},
-        blueprints: {
-          [blueprint.uid]: blueprint,
-        },
-        currentBlueprintId: blueprint.uid,
+        ...state,
+        connections: state.connections.filter(
+          (conn) => !(
+            conn.sourceNodeId === sourceNodeId
+            && conn.sourceName === sourceName
+            && conn.targetNodeId === targetNodeId
+            && conn.targetName === targetName
+          ),
+        ),
       }
     }
-    case PORT_VALUE_CHANGED: {
-      const { uid, portName, value } = action
+    case INITIALIZED: {
+      const blueprint = createBlueprint()
+      const blueprints = { [blueprint.uid]: blueprint }
+      return createBlueprintState({ blueprints })
+    }
+    case PORT_CHANGED: {
+      const {
+        uid,
+        name,
+        properties,
+      } = action
       const { nodes } = state
       const node = nodes[uid]
       if (node) {
-        const port = node.ports[portName]
-        if (port) {
-          return {
-            ...state,
-            nodes: {
-              ...nodes,
-              [uid]: {
-                ...node,
-                ports: {
-                  ...node.ports,
-                  [portName]: {
-                    ...port,
-                    value,
-                  },
-                },
-              },
-            },
-          }
+        return {
+          ...state,
+          nodes: {
+            ...nodes,
+            [uid]: changePort(node, name, properties),
+          },
         }
       }
       return state
@@ -71,19 +97,13 @@ export function blueprintReducer(
           ...state.nodes,
           [node.uid]: {
             ...node,
-            parentId: currentBlueprintId,
+            blueprintId: currentBlueprintId,
           },
         },
       }
     }
-    case NODE_DELETED: {
-      const { uid } = action
-      const nodes = { ...state.nodes }
-      delete nodes[uid]
-      return { ...state, nodes }
-    }
-    case NODE_PROPERTY_CHANGED: {
-      const { uid, property, value } = action
+    case NODE_CHANGED: {
+      const { uid, properties } = action
       const { nodes } = state
       const node = nodes[uid]
       if (node) {
@@ -93,12 +113,32 @@ export function blueprintReducer(
             ...nodes,
             [uid]: {
               ...node,
-              [property]: value,
+              ...properties,
             },
           },
         }
       }
       return state
+    }
+    case NODE_DELETED: {
+      const { uid } = action
+      const nodes = { ...state.nodes }
+      delete nodes[uid]
+      return {
+        ...state,
+        connections: state.connections.filter((conn) => (
+          conn.sourceNodeId !== uid
+          && conn.targetNodeId !== uid
+        )),
+        nodes,
+      }
+    }
+    case SELECTION_ADDED: {
+      const { uid } = action
+      return { ...state, selection: [uid] }
+    }
+    case SELECTION_CLEARED: {
+      return { ...state, selection: [] }
     }
     default:
       return state

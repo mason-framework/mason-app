@@ -1,29 +1,21 @@
 import React from 'react'
 import { Drag } from '@vx/drag'
+import { Hotspot } from 'store/blueprint/types'
 import {
-  GraphConnection,
-  GraphHotspot,
-  COLORS_DEFAULT_STROKE,
-  COLORS_DRAG_STROKE,
-  COLORS_SELECTED_STROKE,
-  COLORS_NODE_FILL,
-  COLORS_TEXT_FILL,
-} from 'store/graph/types'
+  COLOR_DEFAULT_STROKE,
+  COLOR_DRAG_STROKE,
+  COLOR_SELECTED_STROKE,
+  COLOR_NODE_FILL,
+  COLOR_TEXT_FILL,
+} from 'store/graph/colors'
 
 import GraphHotspotItem from 'components/GraphHotspotItem'
-
-const FLIP_PLACEMENT: Record<string, string> = {
-  left: 'right',
-  right: 'left',
-  top: 'bottom',
-  bottom: 'top',
-}
 
 interface Props {
   dragHeight?: number
   dragWidth?: number
   height: number
-  hotspots: Array<GraphHotspot>
+  hotspots: Array<Hotspot>
   isConnecting: boolean
   selected: boolean
   uid: string
@@ -36,7 +28,7 @@ interface Props {
 interface Actions {
   onConnectionEnd(): void
   onConnectionMove(dx: number, dy: number): void
-  onConnectionStart(connection: GraphConnection): void
+  onConnectionStart(hotspot: Hotspot, x: number, y: number): void
   onDrag(uid: string, dx: number, dy: number): void
   onDragEnd(uid: string): void
   onDragStart(uid: string): void
@@ -77,15 +69,15 @@ const GraphNodeItem = ({
       dx,
       dy,
     }) => {
-      let stroke = COLORS_DEFAULT_STROKE
+      let stroke = COLOR_DEFAULT_STROKE
       let nodeX = x
       let nodeY = y
       if (isDragging) {
-        stroke = COLORS_DRAG_STROKE
+        stroke = COLOR_DRAG_STROKE
         nodeX += dx
         nodeY += dy
       } else if (selected) {
-        stroke = COLORS_SELECTED_STROKE
+        stroke = COLOR_SELECTED_STROKE
       }
       return (
         <>
@@ -94,7 +86,7 @@ const GraphNodeItem = ({
               rx={6}
               width={width}
               height={height}
-              fill={COLORS_NODE_FILL}
+              fill={COLOR_NODE_FILL}
               stroke={stroke}
               style={{ pointerEvents: isConnecting ? 'none' : 'initial' }}
               strokeWidth={2}
@@ -108,7 +100,7 @@ const GraphNodeItem = ({
             <text
               x={20}
               y={5 + (height / 2)}
-              fill={COLORS_TEXT_FILL}
+              fill={COLOR_TEXT_FILL}
               fontSize={12}
               style={{ pointerEvents: 'none', userSelect: 'none' }}
             >
@@ -116,42 +108,21 @@ const GraphNodeItem = ({
             </text>
           </g>
 
-          {hotspots.map((hotspot) => {
-            const isSource = hotspot.offsetX !== 1
-            const createConnection = (): GraphConnection => ({
-              source: isSource ? hotspot.uid : '',
-              target: isSource ? '' : hotspot.uid,
-              sourcePlacement: isSource ? hotspot.placement : FLIP_PLACEMENT[hotspot.placement],
-              sourcePos: {
-                x: nodeX + (isSource ? 0 : hotspot.offsetX),
-                y: nodeY + (isSource ? 0 : hotspot.offsetY),
-                offsetX: isSource ? hotspot.offsetX : 0,
-                offsetY: isSource ? hotspot.offsetY : 0,
-              },
-              targetPos: {
-                x: nodeX + (isSource ? hotspot.offsetX : 0),
-                y: nodeY + (isSource ? hotspot.offsetY : 0),
-                offsetX: isSource ? 0 : hotspot.offsetX,
-                offsetY: isSource ? 0 : hotspot.offsetY,
-              },
-              targetPlacement: isSource ? FLIP_PLACEMENT[hotspot.placement] : hotspot.placement,
-            })
-            return (
-              <GraphHotspotItem
-                fill={hotspot.fill || ''}
-                isConnecting={isConnecting}
-                key={hotspot.uid}
-                onConnectionEnd={onConnectionEnd}
-                onConnectionStart={() => onConnectionStart(createConnection())}
-                onConnectionMove={onConnectionMove}
-                stroke={stroke}
-                title={hotspot.title || ''}
-                transform={`translate(${nodeX}, ${nodeY})`}
-                x={hotspot.offsetX}
-                y={hotspot.offsetY}
-              />
-            )
-          })}
+          {hotspots.map((hotspot) => (
+            <GraphHotspotItem
+              fill={hotspot.fill || ''}
+              isConnecting={isConnecting}
+              key={`${hotspot.nodeId}.${hotspot.name}`}
+              onConnectionEnd={onConnectionEnd}
+              onConnectionStart={() => onConnectionStart(hotspot, nodeX, nodeY)}
+              onConnectionMove={onConnectionMove}
+              stroke={stroke}
+              title={hotspot.title || ''}
+              transform={`translate(${nodeX}, ${nodeY})`}
+              x={hotspot.offsetX}
+              y={hotspot.offsetY}
+            />
+          ))}
         </>
       )
     }}

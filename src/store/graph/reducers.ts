@@ -2,34 +2,112 @@ import {
   CONNECTOR_FINISHED,
   CONNECTOR_MOVED,
   CONNECTOR_STARTED,
-  CONNECTION_ADDED,
-  CONNECTION_DELETED,
-  GRAPH_CLEARED,
-  NODE_ADDED,
-  NODE_DELETED,
-  NODE_MOVE_FINISHED,
   NODE_MOVED,
-  SELECTION_ADDED,
-  SELECTION_CLEARED,
+  NODE_DELTA_CLEARED,
   GraphAction,
-  GraphNode,
   GraphState,
+  createGraphState,
 } from 'store/graph/types'
 import {
-  NODE_PROPERTY_CHANGED,
+  INITIALIZED,
+  NODE_ADDED,
+  NODE_DELETED,
   BlueprintAction,
+  Connection,
+  Hotspot,
 } from 'store/blueprint/types'
 
 
-const createState = (): GraphState => ({
-  connector: undefined,
-  deltas: {},
-  nodes: [],
-  connections: [],
-  selection: [],
-})
+const SOURCE_PLACEMENTS = ['right', 'bottom']
+const INVERSE_PLACEMENT: Record<string, string> = {
+  left: 'right',
+  right: 'left',
+  top: 'bottom',
+  bottom: 'top',
+}
 
-const initialState: GraphState = createState()
+
+function makeConnector(
+  {
+    nodeId,
+    name,
+    offsetX,
+    offsetY,
+    placement,
+  }: Hotspot,
+  x: number,
+  y: number,
+): Connection {
+  const isSource = SOURCE_PLACEMENTS.includes(placement)
+  return {
+    sourceNodeId: isSource ? nodeId : '',
+    sourceName: isSource ? name : '',
+    sourcePlacement: isSource ? placement : INVERSE_PLACEMENT[placement],
+    sourcePos: {
+      x: x + (isSource ? 0 : offsetX),
+      y: y + (isSource ? 0 : offsetY),
+      offsetX: isSource ? offsetX : 0,
+      offsetY: isSource ? offsetY : 0,
+    },
+    targetNodeId: isSource ? '' : nodeId,
+    targetName: isSource ? '' : name,
+    targetPlacement: isSource ? INVERSE_PLACEMENT[placement] : placement,
+    targetPos: {
+      x: x + (isSource ? offsetX : 0),
+      y: y + (isSource ? offsetY : 0),
+      offsetX: isSource ? 0 : offsetX,
+      offsetY: isSource ? 0 : offsetY,
+    },
+  }
+}
+
+
+function moveConnector(connector: Connection, dx: number, dy: number): Connection {
+  const {
+    sourceNodeId,
+    sourcePos,
+    targetNodeId,
+    targetPos,
+  } = connector
+  if (sourceNodeId) {
+    const {
+      x,
+      y,
+      offsetX,
+      offsetY,
+    } = sourcePos
+    return {
+      ...connector,
+      targetPos: {
+        x: x + dx + offsetX,
+        y: y + dy + offsetY,
+        offsetX: 0,
+        offsetY: 0,
+      },
+    }
+  }
+  if (targetNodeId) {
+    const {
+      x,
+      y,
+      offsetX,
+      offsetY,
+    } = targetPos
+    return {
+      ...connector,
+      sourcePos: {
+        x: x + dx + offsetX,
+        y: y + dy + offsetY,
+        offsetX: 0,
+        offsetY: 0,
+      },
+    }
+  }
+  return connector
+}
+
+
+const initialState: GraphState = createGraphState()
 
 export function graphReducer(
   state = initialState,
@@ -41,145 +119,48 @@ export function graphReducer(
     }
     case CONNECTOR_MOVED: {
       const { connector } = state
-      const { dx, dy } = action
-      if (connector && connector.source) {
-        const {
-          x,
-          y,
-          offsetX,
-          offsetY,
-        } = connector.sourcePos
-        return {
-          ...state,
-          connector: {
-            ...connector,
-            targetPos: {
-              x: x + dx + offsetX,
-              y: y + dy + offsetY,
-              offsetX: 0,
-              offsetY: 0,
-            },
-          },
-        }
-      }
-      if (connector && connector.target) {
-        const {
-          x,
-          y,
-          offsetX,
-          offsetY,
-        } = connector.targetPos
-        return {
-          ...state,
-          connector: {
-            ...connector,
-            sourcePos: {
-              x: x + dx + offsetX,
-              y: y + dy + offsetY,
-              offsetX: 0,
-              offsetY: 0,
-            },
-          },
-        }
+      if (connector) {
+        const { dx, dy } = action
+        return { ...state, connector: moveConnector(connector, dx, dy) }
       }
       return state
     }
     case CONNECTOR_STARTED: {
-      const { connector } = action
-      return { ...state, connector }
+      const { hotspot, x, y } = action
+      return { ...state, connector: makeConnector(hotspot, x, y) }
     }
-    case CONNECTION_ADDED: {
-      const { connection } = action
-      return {
-        ...state,
-        connections: [...state.connections, connection],
-      }
-    }
-    case CONNECTION_DELETED: {
-      const { source, target } = action
-      return {
-        ...state,
-        connections: state.connections.filter(
-          (conn) => !(
-            conn.source === source
-            && conn.target === target
-          ),
-        ),
-      }
+    case INITIALIZED: {
+      return createGraphState()
     }
     case NODE_ADDED: {
       const { node } = action
       return {
         ...state,
-        nodes: [...state.nodes, node],
+        nodeIds: [...state.nodeIds, node.uid],
       }
     }
     case NODE_DELETED: {
       const { uid } = action
       return {
         ...state,
-        connections: state.connections.filter((conn) => (
-          conn.source.split('.')[0] !== uid
-          && conn.target.split('.')[0] !== uid
-        )),
-        nodes: state.nodes.filter((node) => node.uid !== uid),
+        nodeIds: state.nodeIds.filter((nodeId) => nodeId !== uid),
       }
-    }
-    case NODE_PROPERTY_CHANGED: {
-      const { uid, property, value } = action
-      if (property === 'label') {
-        return {
-          ...state,
-          nodes: state.nodes.map((node) => {
-            if (uid === node.uid) {
-              return ({
-                ...node,
-                label: value,
-              })
-            }
-            return node
-          }),
-        }
-      }
-      return state
-    }
-    case NODE_MOVE_FINISHED: {
-      const { uid } = action
-      const { deltas: oldDeltas, nodes: old } = state
-      const { dx, dy } = oldDeltas[uid] || { dx: 0, dy: 0 }
-      const nodes = old.map((node: GraphNode): GraphNode => {
-        if (node.uid === uid) {
-          return {
-            ...node,
-            x: node.x + dx,
-            y: node.y + dy,
-          }
-        }
-        return node
-      })
-      const deltas = { ...oldDeltas }
-      delete deltas[uid]
-      return { ...state, deltas, nodes }
     }
     case NODE_MOVED: {
       const { uid, dx, dy } = action
       return {
         ...state,
-        deltas: {
-          ...state.deltas,
+        nodeDeltas: {
+          ...state.nodeDeltas,
           [uid]: { dx, dy },
         },
       }
     }
-    case GRAPH_CLEARED: {
-      return createState()
-    }
-    case SELECTION_ADDED: {
+    case NODE_DELTA_CLEARED: {
       const { uid } = action
-      return { ...state, selection: [uid] }
-    }
-    case SELECTION_CLEARED: {
-      return { ...state, selection: [] }
+      const nodeDeltas = { ...state.nodeDeltas }
+      delete nodeDeltas[uid]
+      return { ...state, nodeDeltas }
     }
     default:
       return state

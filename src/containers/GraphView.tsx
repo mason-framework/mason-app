@@ -12,28 +12,32 @@ import {
   NodeSchema,
 } from 'store/library/types'
 import {
-  dropNodeSchema,
+  addSelection,
   clearSelection,
+} from 'store/blueprint/actions'
+import {
+  dropNodeSchema,
   finishMoveNode,
   moveNode,
-  addSelection,
   startConnector,
   moveConnector,
   stopConnector,
 } from 'store/graph/actions'
 import {
-  getMappedConnections,
+  getConnections,
   getIsConnecting,
   getNodes,
-  getSelection,
 } from 'store/graph/selectors'
-import { GraphNode, GraphConnection } from 'store/graph/types'
+import {
+  getSelection,
+} from 'store/blueprint/selectors'
+import { Node, Connection, Hotspot } from 'store/blueprint/types'
 import { ReduxState } from 'store/types'
 
 interface Props {
   isConnecting: boolean
-  nodes: Array<GraphNode>
-  connections: Array<GraphConnection>
+  nodes: Array<Node>
+  connections: Array<Connection>
   selection: Array<string>
 }
 
@@ -41,7 +45,7 @@ interface Actions {
   onClearSelection(): void
   onConnectionEnd(): void
   onConnectionMove(dx: number, dy: number): void
-  onConnectionStart(connection: GraphConnection): void
+  onConnectionStart(hotspot: Hotspot, x: number, y: number): void
   onDropNodeSchema(nodeSchema: NodeSchema, x: number, y: number): void
   onNodeDrag(uid: string, dx: number, dy: number): void
   onNodeDragEnd(uid: string): void
@@ -114,7 +118,7 @@ const GraphView = ({
 }
 
 const selector = createStructuredSelector<ReduxState, Props>({
-  connections: getMappedConnections,
+  connections: getConnections,
   isConnecting: getIsConnecting,
   nodes: getNodes,
   selection: getSelection,

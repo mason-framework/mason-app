@@ -2,8 +2,7 @@ import React from 'react'
 import { Menu, Divider, Typography } from 'antd'
 import { connect } from 'react-redux'
 
-import { initializeFile } from 'store/app/actions'
-import { deleteSelection } from 'store/graph/actions'
+import { initialize, deleteSelection } from 'store/blueprint/actions'
 
 const { Text } = Typography
 const { SubMenu } = Menu
@@ -16,7 +15,7 @@ const TITLE_STYLE = {
 
 
 interface Actions {
-  onNewFile(): void
+  onInitialize(): void
   onDeleteSelection(): void
 }
 
@@ -33,14 +32,16 @@ const DELETE_ACTION = 'DELETE_ACTION'
 
 class MenuBar extends React.Component<Actions> {
   handleClick({ key }: ClickEvent) {
+    const {
+      onInitialize,
+      onDeleteSelection,
+    } = this.props
     switch (key) {
       case NEW_FILE_ACTION: {
-        const { onNewFile } = this.props
-        onNewFile()
+        onInitialize()
         break
       }
       case DELETE_ACTION: {
-        const { onDeleteSelection } = this.props
         onDeleteSelection()
         break
       }
@@ -84,7 +85,7 @@ class MenuBar extends React.Component<Actions> {
 }
 
 const actions = {
-  onNewFile: initializeFile,
+  onInitialize: initialize,
   onDeleteSelection: deleteSelection,
 }
 

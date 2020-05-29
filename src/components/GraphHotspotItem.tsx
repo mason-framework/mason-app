@@ -1,6 +1,6 @@
 import React from 'react'
 import { Drag } from '@vx/drag'
-import { COLORS_BG } from 'store/graph/types'
+import { COLOR_BG } from 'store/graph/colors'
 
 interface Props {
   dragWidth?: number
@@ -23,7 +23,7 @@ interface Actions {
 const GraphHotspotItem = ({
   dragWidth = 10000,
   dragHeight = 10000,
-  fill = COLORS_BG,
+  fill = COLOR_BG,
   isConnecting,
   onConnectionEnd,
   onConnectionMove,

@@ -1,0 +1,6 @@
+export const COLOR_BG = '#1a1a1a'
+export const COLOR_DEFAULT_STROKE = '#666'
+export const COLOR_DRAG_STROKE = 'yellow'
+export const COLOR_NODE_FILL = '#3a3a3a'
+export const COLOR_SELECTED_STROKE = 'aqua'
+export const COLOR_TEXT_FILL = '#aaa'

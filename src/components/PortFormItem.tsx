@@ -14,7 +14,7 @@ interface Props {
 }
 
 interface FormProps extends Props {
-  connections: Array<string>
+  connectionHint: string
 }
 
 interface Actions {
@@ -64,16 +64,16 @@ const EDITORS: Record<string, (props: Props & Actions) => React.ReactElement> = 
   str: StringEditor,
 }
 
-const PortFormItem = ({ connections, onChange, port }: FormProps & Actions) => {
+const PortFormItem = ({ connectionHint, onChange, port }: FormProps & Actions) => {
   const editorType = EDITORS[port.type]
-  if (connections) {
+  if (connectionHint) {
     return (
       <Form.Item
         label={port.label}
         name={port.name}
         style={{ marginBottom: 2 }}
       >
-        <Input disabled placeholder={connections.join(', ')} />
+        <Input disabled placeholder={connectionHint} />
       </Form.Item>
     )
   }

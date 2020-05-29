@@ -3,9 +3,8 @@ import React from 'react'
 
 import { connect } from 'react-redux'
 import { createStructuredSelector } from 'reselect'
-import { nodePropertyChanger, changePortValue } from 'store/blueprint/actions'
-import { getSelectedNode } from 'store/blueprint/selectors'
-import { getSelectedConnectionTargets } from 'store/graph/selectors'
+import { changeNode, changePort } from 'store/blueprint/actions'
+import { getConnectionHints, getSelectedNode } from 'store/blueprint/selectors'
 import { Node, Port } from 'store/blueprint/types'
 import { ReduxState } from 'store/types'
 import { Divider, Typography, Form } from 'antd'
@@ -15,24 +14,24 @@ const { Text } = Typography
 
 interface Props {
   node?: Node
-  connectedTargets: Record<string, Array<string>>
+  connectionHints: Record<string, string>
 }
 
 interface Actions {
-  onChangeLabel(uid: string, label: string): void
-  onChangePort(uid: string, portName: string, value: any): void
+  onChangeNode(uid: string, properties: Record<string, any>): void
+  onChangePort(uid: string, name: string, properties: Record<string, any>): void
 }
 
 const NodeForm = ({
-  connectedTargets,
+  connectionHints,
   node,
-  onChangeLabel,
+  onChangeNode,
   onChangePort,
 }: Props & Actions) => (
   <div style={{ padding: 8 }}>
     {!!node && (
       <>
-        <Text editable={{ onChange: (value: string) => onChangeLabel(node.uid, value) }}>
+        <Text editable={{ onChange: (value: string) => onChangeNode(node.uid, { label: value }) }}>
           {node.label}
         </Text>
         <Divider style={{ margin: '12px 0' }} />
@@ -48,8 +47,8 @@ const NodeForm = ({
                 acc.push((
                   <PortFormItem
                     key={port.name}
-                    connections={connectedTargets[port.name]}
-                    onChange={(value) => onChangePort(node.uid, port.name, value)}
+                    connectionHint={connectionHints[port.name]}
+                    onChange={(value) => onChangePort(node.uid, port.name, { value })}
                     port={port}
                   />
                 ))
@@ -65,12 +64,12 @@ const NodeForm = ({
 
 const selector = createStructuredSelector<ReduxState, Props>({
   node: getSelectedNode,
-  connectedTargets: getSelectedConnectionTargets,
+  connectionHints: getConnectionHints,
 })
 
 const actions = {
-  onChangeLabel: nodePropertyChanger('label'),
-  onChangePort: changePortValue,
+  onChangeNode: changeNode,
+  onChangePort: changePort,
 }
 
 export default connect(selector, actions)(NodeForm)

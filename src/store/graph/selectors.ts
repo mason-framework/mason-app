@@ -1,27 +1,29 @@
-import _get from 'lodash/get'
-import _keyBy from 'lodash/keyBy'
 import _reduce from 'lodash/reduce'
 import { createSelector } from 'reselect'
+
 import {
-  GraphConnection,
-  GraphDelta,
-  GraphNode,
-  GraphState,
-} from 'store/graph/types'
+  Connection,
+  PositionDelta,
+  Node,
+} from 'store/blueprint/types'
+import {
+  getConnections as getBlueprintConnections,
+  getNodes as getBlueprintNodes,
+} from 'store/blueprint/selectors'
+import { GraphState } from 'store/graph/types'
 import { ReduxState } from 'store/types'
 
-function mapConnection(
-  connection: GraphConnection,
-  nodeMap: Record<string, GraphNode>,
-  deltas: Record<string, GraphDelta>,
-): GraphConnection {
+function mapToNode(
+  connection: Connection,
+  nodes: Record<string, Node>,
+  deltas: Record<string, PositionDelta>,
+): Connection {
   let { sourcePos, targetPos } = connection
-  const sourceNodeId = connection.source.split('.')[0]
-  const targetNodeId = connection.target.split('.')[0]
-  const sourceNode = nodeMap[sourceNodeId]
-  const targetNode = nodeMap[targetNodeId]
+  const { sourceNodeId, targetNodeId } = connection
+  const sourceNode = nodes[sourceNodeId]
+  const targetNode = nodes[targetNodeId]
   if (sourceNode) {
-    const { dx, dy } = _get(deltas, sourceNodeId, { dx: 0, dy: 0 })
+    const { dx, dy } = deltas[sourceNodeId] || { dx: 0, dy: 0 }
     sourcePos = {
       ...sourcePos,
       x: sourceNode.x + dx,
@@ -29,82 +31,48 @@ function mapConnection(
     }
   }
   if (targetNode) {
-    const { dx, dy } = _get(deltas, targetNodeId, { dx: 0, dy: 0 })
+    const { dx, dy } = deltas[targetNodeId] || { dx: 0, dy: 0 }
     targetPos = {
       ...targetPos,
       x: targetNode.x + dx,
       y: targetNode.y + dy,
     }
   }
-  return {
-    ...connection,
-    sourcePos,
-    targetPos,
-  }
+  return { ...connection, sourcePos, targetPos }
 }
 
 export const getGraph = ({ graph }: ReduxState): GraphState => graph
-export const getConnector = ({ graph }: ReduxState): GraphConnection | undefined => graph.connector
-export const getDeltas = ({ graph }: ReduxState): Record<string, GraphDelta> => graph.deltas
-export const getSelection = ({ graph }: ReduxState): Array<string> => graph.selection
-export const getConnections = ({ graph }: ReduxState): Array<GraphConnection> => graph.connections
-export const getNodes = ({ graph }: ReduxState): Array<GraphNode> => graph.nodes
+export const getConnector = ({ graph }: ReduxState): Connection | undefined => graph.connector
+export const getNodeDeltas = ({ graph }: ReduxState): Record<string, PositionDelta> => graph.nodeDeltas
+export const getNodeIds = ({ graph }: ReduxState): Array<string> => graph.nodeIds
 
 export const getIsConnecting = createSelector(
   getConnector,
   (connector): boolean => !!connector,
 )
 
-export const getNodeMap = createSelector(
-  getNodes,
-  (nodes): Record<string, GraphNode> => _keyBy(nodes, 'uid'),
+export const getNodes = createSelector(
+  getBlueprintNodes,
+  getNodeIds,
+  (nodes, uids) => _reduce(uids, (acc: Array<Node>, uid: string): Array<Node> => {
+    const node = nodes[uid]
+    if (node) {
+      acc.push(node)
+    }
+    return acc
+  }, []),
 )
 
-export const getMappedConnections = createSelector(
+export const getConnections = createSelector(
+  getBlueprintConnections,
   getConnector,
-  getConnections,
-  getNodeMap,
-  getDeltas,
-  (connector, connections, nodeMap, deltas): Array<GraphConnection> => {
-    const mapped = connections.map((conn) => mapConnection(conn, nodeMap, deltas))
+  getBlueprintNodes,
+  getNodeDeltas,
+  (connections, connector, nodes, deltas): Array<Connection> => {
+    const mapped = connections.map((conn) => mapToNode(conn, nodes, deltas))
     if (connector) {
       mapped.push(connector)
     }
     return mapped
-  },
-)
-
-export const getSelectedNodeId = createSelector(
-  getSelection,
-  (selection): string => selection[0] || '',
-)
-
-export const getSelectedConnectionTargets = createSelector(
-  getSelectedNodeId,
-  getConnections,
-  getNodeMap,
-  (uid, connections, nodeMap): Record<string, Array<string>> => (
-    _reduce(
-      connections,
-      (
-        acc: Record<string, Array<string>>,
-        connection: GraphConnection,
-      ): Record<string, Array<string>> => {
-        const [targetId, targetItem] = (connection.target || '.').split('.')
-        const [sourceId, sourceItem] = (connection.source || '.').split('.')
-        const source = nodeMap[sourceId]
-        if (targetId === uid && source) {
-          return {
-            ...acc,
-            [targetItem]: [
-              ...(acc[targetItem] || []),
-              `$("${source.label}"."${sourceItem}")`,
-            ],
-          }
-        }
-        return acc
-      },
-      {},
-    )
-  ),
+  }
 )

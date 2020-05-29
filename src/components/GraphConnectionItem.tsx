@@ -1,12 +1,14 @@
 import React from 'react'
 import { curveBasis } from '@vx/curve'
 import { LinePath } from '@vx/shape'
-import { GraphPosition, COLORS_SELECTED_STROKE } from 'store/graph/types'
+
+import { Position } from 'store/blueprint/types'
+import { COLOR_SELECTED_STROKE } from 'store/graph/colors'
 
 interface Props {
   uid: string,
-  sourcePos: GraphPosition,
-  targetPos: GraphPosition,
+  sourcePos: Position,
+  targetPos: Position,
   selected: boolean
   stroke?: string
   sourcePlacement: string
@@ -37,7 +39,7 @@ const GraphConnectionItem = ({
 
   let color = stroke || 'white'
   if (selected) {
-    color = COLORS_SELECTED_STROKE
+    color = COLOR_SELECTED_STROKE
   }
 
   const data = [{ x: startX, y: startY }]
