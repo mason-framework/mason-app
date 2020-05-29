@@ -52,10 +52,10 @@ export const getConnectionHints = createSelector(
         if (conn.targetNodeId === selected.uid) {
           const sourceNode = nodes[conn.sourceNodeId]
           const hint = `$("${sourceNode.label}"."${conn.sourceName}")`
-          if (hints[conn.sourceName]) {
-            hints[conn.sourceName] += `, ${hint}`
+          if (hints[conn.targetName]) {
+            hints[conn.targetName] += `, ${hint}`
           } else {
-            hints[conn.sourceName] = hint
+            hints[conn.targetName] = hint
           }
         }
       }
