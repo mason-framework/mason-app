@@ -6,8 +6,6 @@ import {
   NODE_CHANGED,
   NODE_DELETED,
   PORT_CHANGED,
-  SELECTION_ADDED,
-  SELECTION_CLEARED,
   BlueprintAction,
   BlueprintState,
   Node,
@@ -93,6 +91,7 @@ export function blueprintReducer(
       const { currentBlueprintId } = state
       return {
         ...state,
+        currentNodeIds: [...state.currentNodeIds, node.uid],
         nodes: {
           ...state.nodes,
           [node.uid]: {
@@ -130,15 +129,9 @@ export function blueprintReducer(
           conn.sourceNodeId !== uid
           && conn.targetNodeId !== uid
         )),
+        currentNodeIds: state.currentNodeIds.filter((nodeId) => nodeId !== uid),
         nodes,
       }
-    }
-    case SELECTION_ADDED: {
-      const { uid } = action
-      return { ...state, selection: [uid] }
-    }
-    case SELECTION_CLEARED: {
-      return { ...state, selection: [] }
     }
     default:
       return state

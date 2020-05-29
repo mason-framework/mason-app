@@ -4,17 +4,16 @@ import { AutoSizer } from 'react-virtualized'
 import { connect } from 'react-redux'
 import { createStructuredSelector } from 'reselect'
 import { useDrop } from 'react-dnd'
+import { HotKeys } from 'react-hotkeys'
 
 import Graph from 'components/Graph'
+
 import {
   LIBRARY_NODE_DRAGGED,
   DragNodeSchemaAction,
   NodeSchema,
 } from 'store/library/types'
-import {
-  addSelection,
-  clearSelection,
-} from 'store/blueprint/actions'
+
 import {
   dropNodeSchema,
   finishMoveNode,
@@ -23,14 +22,23 @@ import {
   moveConnector,
   stopConnector,
 } from 'store/graph/actions'
+
+import {
+  addSelection,
+  clearSelection,
+  deleteSelection,
+} from 'store/selection/actions'
+
 import {
   getConnections,
   getIsConnecting,
   getNodes,
 } from 'store/graph/selectors'
+
 import {
   getSelection,
-} from 'store/blueprint/selectors'
+} from 'store/selection/selectors'
+
 import { Node, Connection, Hotspot } from 'store/blueprint/types'
 import { ReduxState } from 'store/types'
 
@@ -46,6 +54,7 @@ interface Actions {
   onConnectionEnd(): void
   onConnectionMove(dx: number, dy: number): void
   onConnectionStart(hotspot: Hotspot, x: number, y: number): void
+  onDelete(): void
   onDropNodeSchema(nodeSchema: NodeSchema, x: number, y: number): void
   onNodeDrag(uid: string, dx: number, dy: number): void
   onNodeDragEnd(uid: string): void
@@ -61,6 +70,7 @@ const GraphView = ({
   onConnectionMove,
   onConnectionStart,
   onClearSelection,
+  onDelete,
   onDropNodeSchema,
   onNodeDrag,
   onNodeDragStart,
@@ -95,22 +105,27 @@ const GraphView = ({
           }}
           ref={dropInfo[1]}
         >
-          <Graph
-            connections={connections}
-            height={10000}
-            isConnecting={isConnecting}
-            nodes={nodes}
-            onConnectionEnd={onConnectionEnd}
-            onConnectionMove={onConnectionMove}
-            onConnectionStart={onConnectionStart}
-            onClearSelection={onClearSelection}
-            onNodeDrag={onNodeDrag}
-            onNodeDragStart={onNodeDragStart}
-            onNodeDragEnd={onNodeDragEnd}
-            onSelect={onSelect}
-            selection={selection}
-            width={10000}
-          />
+          <HotKeys
+            keyMap={{ DELETE_NODE: ['del', 'backspace'] }}
+            handlers={{ DELETE_NODE: onDelete }}
+          >
+            <Graph
+              connections={connections}
+              height={10000}
+              isConnecting={isConnecting}
+              nodes={nodes}
+              onConnectionEnd={onConnectionEnd}
+              onConnectionMove={onConnectionMove}
+              onConnectionStart={onConnectionStart}
+              onClearSelection={onClearSelection}
+              onNodeDrag={onNodeDrag}
+              onNodeDragStart={onNodeDragStart}
+              onNodeDragEnd={onNodeDragEnd}
+              onSelect={onSelect}
+              selection={selection}
+              width={10000}
+            />
+          </HotKeys>
         </div>
       )}
     </AutoSizer>
@@ -133,6 +148,7 @@ const actions = {
   onNodeDrag: moveNode,
   onNodeDragStart: addSelection,
   onNodeDragEnd: finishMoveNode,
+  onDelete: deleteSelection,
   onSelect: addSelection,
 }
 

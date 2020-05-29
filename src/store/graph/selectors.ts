@@ -9,6 +9,7 @@ import {
 import {
   getConnections as getBlueprintConnections,
   getNodes as getBlueprintNodes,
+  getCurrentNodeIds,
 } from 'store/blueprint/selectors'
 import { GraphState } from 'store/graph/types'
 import { ReduxState } from 'store/types'
@@ -43,8 +44,9 @@ function mapToNode(
 
 export const getGraph = ({ graph }: ReduxState): GraphState => graph
 export const getConnector = ({ graph }: ReduxState): Connection | undefined => graph.connector
-export const getNodeDeltas = ({ graph }: ReduxState): Record<string, PositionDelta> => graph.nodeDeltas
-export const getNodeIds = ({ graph }: ReduxState): Array<string> => graph.nodeIds
+export const getNodeDeltas = (
+  ({ graph }: ReduxState): Record<string, PositionDelta> => graph.nodeDeltas
+)
 
 export const getIsConnecting = createSelector(
   getConnector,
@@ -53,7 +55,7 @@ export const getIsConnecting = createSelector(
 
 export const getNodes = createSelector(
   getBlueprintNodes,
-  getNodeIds,
+  getCurrentNodeIds,
   (nodes, uids) => _reduce(uids, (acc: Array<Node>, uid: string): Array<Node> => {
     const node = nodes[uid]
     if (node) {
@@ -74,5 +76,5 @@ export const getConnections = createSelector(
       mapped.push(connector)
     }
     return mapped
-  }
+  },
 )

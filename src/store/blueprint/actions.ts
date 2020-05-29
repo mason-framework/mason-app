@@ -6,9 +6,6 @@ import {
   NODE_CHANGED,
   NODE_DELETED,
   PORT_CHANGED,
-  SELECTION_ADDED,
-  SELECTION_CLEARED,
-  SELECTION_DELETED,
   BlueprintAction,
   Connection,
   Node,
@@ -26,24 +23,11 @@ export const addNode = (node: Node): BlueprintAction => ({
   node,
 })
 
-
-export const addSelection = (uid: string): BlueprintAction => ({
-  type: SELECTION_ADDED,
-  uid,
-})
-
-
 export const changeNode = (uid: string, properties: Record<string, any>): BlueprintAction => ({
   type: NODE_CHANGED,
   uid,
   properties,
 })
-
-
-export const clearSelection = (): BlueprintAction => ({
-  type: SELECTION_CLEARED,
-})
-
 
 export const changePort = (
   uid: string,
@@ -76,10 +60,6 @@ export const deleteNode = (uid: string): BlueprintAction => ({
   uid,
 })
 
-
-export const deleteSelection = (): BlueprintAction => ({
-  type: SELECTION_DELETED,
-})
 
 export const initialize = (): BlueprintAction => ({
   type: INITIALIZED,

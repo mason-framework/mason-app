@@ -16,10 +16,6 @@ export const NODE_CHANGED = '@@blueprint/NODE_CHANGED'
 
 export const PORT_CHANGED = '@@blueprint/PORT_CHANGED'
 
-export const SELECTION_ADDED = '@@blueprint/SELECTION_ADDED'
-export const SELECTION_DELETED = '@@blueprint/SELECTION_DELETED'
-export const SELECTION_CLEARED = '@@blueprint/SELECTION_CLEARED'
-
 
 // Interfaces
 export interface PositionDelta {
@@ -244,15 +240,6 @@ interface AddNodeAction {
   node: Node
 }
 
-interface AddSelectionAction {
-  type: typeof SELECTION_ADDED
-  uid: string
-}
-
-interface ClearSelectionAction {
-  type: typeof SELECTION_CLEARED
-}
-
 interface ChangeNodeAction {
   type: typeof NODE_CHANGED
   uid: string
@@ -279,10 +266,6 @@ interface DeleteNodeAction {
   uid: string
 }
 
-interface DeleteSelectionAction {
-  type: typeof SELECTION_DELETED
-}
-
 interface InitializeAction {
   type: typeof INITIALIZED
 }
@@ -290,13 +273,10 @@ interface InitializeAction {
 export type BlueprintAction =
   AddConnectionAction |
   AddNodeAction |
-  AddSelectionAction |
-  ClearSelectionAction |
   ChangeNodeAction |
   ChangePortAction |
   DeleteConnectionAction |
   DeleteNodeAction |
-  DeleteSelectionAction |
   InitializeAction
 
 // State
@@ -304,15 +284,15 @@ export interface BlueprintState {
   blueprints: Record<string, Blueprint>
   connections: Array<Connection>
   currentBlueprintId: string
+  currentNodeIds: Array<string>
   nodes: Record<string, Node>
-  selection: Array<string>
 }
 
 export const createBlueprintState = (options: any = {}): BlueprintState => ({
   blueprints: {},
   connections: [],
   currentBlueprintId: '',
+  currentNodeIds: [],
   nodes: {},
-  selection: [],
   ...options,
 })

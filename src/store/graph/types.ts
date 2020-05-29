@@ -78,12 +78,10 @@ export type GraphAction =
 export interface GraphState {
   connector?: Connection
   nodeDeltas: Record<string, PositionDelta>
-  nodeIds: Array<string>
 }
 
 export const createGraphState = (options: any = {}): GraphState => ({
   connector: undefined,
   nodeDeltas: {},
-  nodeIds: [],
   ...options,
 })

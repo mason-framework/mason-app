@@ -22,13 +22,11 @@ export const finishConnector = (): GraphAction => ({
   type: CONNECTOR_FINISHED,
 })
 
-
 export const moveConnector = (dx: number, dy: number): GraphAction => ({
   type: CONNECTOR_MOVED,
   dx,
   dy,
 })
-
 
 export const moveNode = (uid: string, dx: number, dy: number): GraphAction => ({
   type: NODE_MOVED,
@@ -37,7 +35,6 @@ export const moveNode = (uid: string, dx: number, dy: number): GraphAction => ({
   dy,
 })
 
-
 export const startConnector = (hotspot: Hotspot, x: number, y: number): GraphAction => ({
   type: CONNECTOR_STARTED,
   hotspot,
@@ -45,11 +42,9 @@ export const startConnector = (hotspot: Hotspot, x: number, y: number): GraphAct
   y,
 })
 
-
 export const stopConnector = (): GraphAction => ({
   type: CONNECTOR_STOPPED,
 })
-
 
 export const dropNodeSchema = (schema: NodeSchema, x: number, y: number): GraphAction => ({
   type: NODE_SCHEMA_DROPPED,
@@ -57,7 +52,6 @@ export const dropNodeSchema = (schema: NodeSchema, x: number, y: number): GraphA
   x,
   y,
 })
-
 
 export const finishMoveNode = (uid: string): GraphAction => ({
   type: NODE_MOVE_FINISHED,

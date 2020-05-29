@@ -12,15 +12,24 @@ import {
   addConnection,
   changeNode,
 } from 'store/blueprint/actions'
-import { clearNodeDelta, finishConnector } from 'store/graph/actions'
+import {
+  clearNodeDelta,
+  finishConnector,
+} from 'store/graph/actions'
 import {
   Connection,
   Node,
   Hotspot,
   createNode,
 } from 'store/blueprint/types'
-import { getNodes, getCurrentBlueprintId } from 'store/blueprint/selectors'
-import { getConnector, getNodeDeltas } from 'store/graph/selectors'
+import {
+  getNodes,
+  getCurrentBlueprintId,
+} from 'store/blueprint/selectors'
+import {
+  getConnector,
+  getNodeDeltas,
+} from 'store/graph/selectors'
 import {
   CONNECTOR_STOPPED,
   NODE_MOVE_FINISHED,
@@ -128,7 +137,6 @@ function* maybeCreateConnectionSaga(): SagaIterator<void> {
   }
   yield put(finishConnector())
 }
-
 
 export function* graphSaga(): SagaIterator<void> {
   yield all([

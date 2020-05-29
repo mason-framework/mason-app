@@ -1,8 +1,10 @@
 import React from 'react'
 import { Menu, Divider, Typography } from 'antd'
 import { connect } from 'react-redux'
+import { ActionCreators } from 'redux-undo'
 
-import { initialize, deleteSelection } from 'store/blueprint/actions'
+import { initialize } from 'store/blueprint/actions'
+import { deleteSelection } from 'store/selection/actions'
 
 const { Text } = Typography
 const { SubMenu } = Menu
@@ -17,6 +19,8 @@ const TITLE_STYLE = {
 interface Actions {
   onInitialize(): void
   onDeleteSelection(): void
+  onUndo(): void
+  onRedo(): void
 }
 
 interface ClickEvent {
@@ -27,6 +31,8 @@ const NEW_FILE_ACTION = 'NEW_FILE_ACTION'
 const SAVE_FILE_ACTION = 'SAVE_FILE_ACTION'
 const SAVE_FILE_AS_ACTION = 'SAVE_FILE_AS_ACTION'
 const SHOW_PREFS_ACTION = 'SHOW_PREFS_ACTION'
+const UNDO_ACTION = 'UNDO_ACTION'
+const REDO_ACTION = 'REDO_ACTION'
 const DELETE_ACTION = 'DELETE_ACTION'
 
 
@@ -35,10 +41,20 @@ class MenuBar extends React.Component<Actions> {
     const {
       onInitialize,
       onDeleteSelection,
+      onUndo,
+      onRedo,
     } = this.props
     switch (key) {
       case NEW_FILE_ACTION: {
         onInitialize()
+        break
+      }
+      case UNDO_ACTION: {
+        onUndo()
+        break
+      }
+      case REDO_ACTION: {
+        onRedo()
         break
       }
       case DELETE_ACTION: {
@@ -60,8 +76,8 @@ class MenuBar extends React.Component<Actions> {
           <Menu.Item key={SHOW_PREFS_ACTION}>Preferences...</Menu.Item>
         </SubMenu>
         <SubMenu title="Edit">
-          <Menu.Item key="undoAction">Undo</Menu.Item>
-          <Menu.Item key="redoAction">Redo</Menu.Item>
+          <Menu.Item key={UNDO_ACTION}>Undo</Menu.Item>
+          <Menu.Item key={REDO_ACTION}>Redo</Menu.Item>
           <Divider style={{ margin: 0 }} />
           <Menu.Item key="copyAction">Copy</Menu.Item>
           <Menu.Item key="cutAction">Cut</Menu.Item>
@@ -87,6 +103,8 @@ class MenuBar extends React.Component<Actions> {
 const actions = {
   onInitialize: initialize,
   onDeleteSelection: deleteSelection,
+  onUndo: ActionCreators.undo,
+  onRedo: ActionCreators.redo,
 }
 
 export default connect(null, actions)(MenuBar)

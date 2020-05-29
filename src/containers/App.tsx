@@ -5,9 +5,11 @@ import { Drawer, Layout } from 'antd'
 import React, { Component } from 'react'
 import { DndProvider } from 'react-dnd'
 import DndBackend from 'react-dnd-html5-backend'
+import { ActionCreators } from 'redux-undo'
+import { HotKeys } from 'react-hotkeys'
 
 import { getLocale, getMessages } from 'store/app/selectors'
-import { initialize as initializeApp } from 'store/app/actions'
+import { initialize } from 'store/app/actions'
 import { ReduxState } from 'store/types'
 
 import BlueprintNavBar from 'containers/BlueprintNavBar'
@@ -25,18 +27,25 @@ interface Props {
 }
 
 interface Actions {
-  initialize: typeof initializeApp
+  onInitialize(): void
+  onUndo(): void
+  onRedo(): void
 }
 
 
 class App extends Component<Props & Actions> {
   componentDidMount() {
-    const { initialize } = this.props
-    initialize()
+    const { onInitialize } = this.props
+    onInitialize()
   }
 
   render() {
-    const { locale, messages }: Props = this.props
+    const {
+      locale,
+      messages,
+      onUndo,
+      onRedo,
+    } = this.props
     return (
       <IntlProvider
         key={locale}
@@ -44,22 +53,27 @@ class App extends Component<Props & Actions> {
         messages={messages}
       >
         <DndProvider backend={DndBackend}>
-          <Layout style={{ height: '100vh' }}>
-            <MenuBar />
-            <Layout>
-              <Sider collapsible collapsedWidth={0}>
-                <LibraryView />
-              </Sider>
-              <Content>
-                <BlueprintNavBar />
-                <GraphView />
-              </Content>
-              <Sider collapsible collapsedWidth={0} reverseArrow width={350}>
-                <NodeForm />
-              </Sider>
+          <HotKeys
+            keyMap={{ UNDO: ['cmd+z'], REDO: ['cmd+shift+z'] }}
+            handlers={{ UNDO: onUndo, REDO: onRedo }}
+          >
+            <Layout style={{ height: '100vh' }}>
+              <MenuBar />
+              <Layout>
+                <Sider collapsible collapsedWidth={0}>
+                  <LibraryView />
+                </Sider>
+                <Content>
+                  <BlueprintNavBar />
+                  <GraphView />
+                </Content>
+                <Sider collapsible collapsedWidth={0} reverseArrow width={350}>
+                  <NodeForm />
+                </Sider>
+              </Layout>
             </Layout>
-          </Layout>
-          <Drawer visible={false} placement="bottom" mask={false} />
+            <Drawer visible={false} placement="bottom" mask={false} />
+          </HotKeys>
         </DndProvider>
       </IntlProvider>
     )
@@ -72,7 +86,9 @@ const selector = createStructuredSelector<ReduxState, Props>({
 })
 
 const actions: Actions = {
-  initialize: initializeApp,
+  onInitialize: initialize,
+  onUndo: ActionCreators.undo,
+  onRedo: ActionCreators.redo,
 }
 
 export default connect(selector, actions)(App)

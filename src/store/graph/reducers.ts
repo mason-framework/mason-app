@@ -10,8 +10,6 @@ import {
 } from 'store/graph/types'
 import {
   INITIALIZED,
-  NODE_ADDED,
-  NODE_DELETED,
   BlueprintAction,
   Connection,
   Hotspot,
@@ -131,20 +129,6 @@ export function graphReducer(
     }
     case INITIALIZED: {
       return createGraphState()
-    }
-    case NODE_ADDED: {
-      const { node } = action
-      return {
-        ...state,
-        nodeIds: [...state.nodeIds, node.uid],
-      }
-    }
-    case NODE_DELETED: {
-      const { uid } = action
-      return {
-        ...state,
-        nodeIds: state.nodeIds.filter((nodeId) => nodeId !== uid),
-      }
     }
     case NODE_MOVED: {
       const { uid, dx, dy } = action
