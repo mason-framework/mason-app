@@ -12,12 +12,14 @@ interface Props {
   transform: string
   x: number
   y: number
+  scaleX: number
+  scaleY: number
 }
 
 interface Actions {
   onConnectionStart(): any
   onConnectionMove(dx: number, dy: number): any
-  onConnectionEnd(): any
+  onConnectionEnd(x: number, y: number): any
 }
 
 const GraphHotspotItem = ({
@@ -33,13 +35,18 @@ const GraphHotspotItem = ({
   transform,
   x,
   y,
+  scaleX,
+  scaleY,
 }: Props & Actions) => (
   <Drag
     width={dragWidth}
     height={dragHeight}
     onDragStart={() => (onConnectionStart())}
-    onDragMove={({ dx, dy }) => (onConnectionMove(dx, dy))}
-    onDragEnd={() => (onConnectionEnd())}
+    onDragMove={({ dx, dy }) => (onConnectionMove(dx / scaleX, dy / scaleY))}
+    onDragEnd={({ event }) => {
+      const { pageX, pageY } = ((event as unknown) as React.MouseEvent).nativeEvent
+      onConnectionEnd(pageX, pageY)
+    }}
     resetOnStart
   >
     {({

@@ -16,3 +16,5 @@ export const getMessages = createSelector(
     ...MESSAGE_CATALOG[locale],
   }),
 )
+
+export const getWorkflowVisible = ({ app }: ReduxState): boolean => app.workflowVisible

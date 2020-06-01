@@ -5,6 +5,29 @@ import { getConnections, getNodes } from 'store/blueprint/selectors'
 import { Connection, Node } from 'store/blueprint/types'
 
 export const getSelection = ({ selection }: ReduxState): Array<string> => selection.selection
+export const getCopiedSelection = (
+  ({ selection }: ReduxState): Array<string> => selection.copy.selection
+)
+export const getCopiedMode = ({ selection }: ReduxState): string => selection.copy.mode
+
+export const getNodesById = (
+  nodes: Record<string, Node>,
+  selection: Array<string>,
+): Array<Node> => _reduce(
+  selection, (acc: Array<Node>, uid: string): Array<Node> => {
+    const node = nodes[uid]
+    if (node) {
+      acc.push(node)
+    }
+    return acc
+  }, [],
+)
+
+export const getCopiedNodes = createSelector(
+  getNodes,
+  getCopiedSelection,
+  getNodesById,
+)
 
 export const getSelectedConnections = createSelector(
   getConnections,
@@ -23,15 +46,7 @@ export const getSelectedConnections = createSelector(
 export const getSelectedNodes = createSelector(
   getNodes,
   getSelection,
-  (nodes: Record<string, Node>, selection: Array<string>): Array<Node> => _reduce(
-    selection, (acc: Array<Node>, uid: string): Array<Node> => {
-      const node = nodes[uid]
-      if (node) {
-        acc.push(node)
-      }
-      return acc
-    }, [],
-  ),
+  getNodesById,
 )
 
 export const getSelectedNode = createSelector(

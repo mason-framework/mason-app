@@ -1,4 +1,5 @@
 import {
+  BLUEPRINT_ADDED,
   CONNECTION_ADDED,
   CONNECTION_DELETED,
   INITIALIZED,
@@ -9,7 +10,6 @@ import {
   BlueprintAction,
   BlueprintState,
   Node,
-  createBlueprint,
   createBlueprintState,
 } from 'store/blueprint/types'
 
@@ -39,9 +39,22 @@ export function blueprintReducer(
   action: BlueprintAction,
 ): BlueprintState {
   switch (action.type) {
+    case BLUEPRINT_ADDED: {
+      const { blueprint, current } = action
+      const currentBlueprintId = current ? blueprint.uid : state.currentBlueprintId
+      const currentNodeIds = current ? [] : state.currentNodeIds
+      return {
+        ...state,
+        blueprints: { ...state.blueprints, [blueprint.uid]: blueprint },
+        currentBlueprintId,
+        currentNodeIds,
+      }
+    }
     case CONNECTION_ADDED: {
       const { connection } = action
-      return { ...state, connections: [...state.connections, connection] }
+      const { currentBlueprintId: blueprintId } = state
+      const connections = [...state.connections, { ...connection, blueprintId }]
+      return { ...state, connections }
     }
     case CONNECTION_DELETED: {
       const {
@@ -63,9 +76,7 @@ export function blueprintReducer(
       }
     }
     case INITIALIZED: {
-      const blueprint = createBlueprint()
-      const blueprints = { [blueprint.uid]: blueprint }
-      return createBlueprintState({ blueprints })
+      return createBlueprintState()
     }
     case PORT_CHANGED: {
       const {

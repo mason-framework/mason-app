@@ -1,5 +1,5 @@
 import React from 'react'
-
+import { useDrop } from 'react-dnd'
 import { localPoint } from '@vx/event'
 import { Zoom } from '@vx/zoom'
 
@@ -8,11 +8,27 @@ import { Node, Connection, Hotspot } from 'store/blueprint/types'
 import GraphNodeItem from 'components/GraphNodeItem'
 import GraphConnectionItem from 'components/GraphConnectionItem'
 
+import {
+  LIBRARY_NODE_DRAGGED,
+  DragNodeSchemaAction,
+  NodeSchema,
+} from 'store/library/types'
+
+interface Point {
+  x: number
+  y: number
+}
+
 interface Props {
   connections: Array<Connection>
   isConnecting: boolean
   nodes: Array<Node>
   selection: Array<string>
+}
+
+interface LayoutProps {
+  scaleX: number
+  scaleY: number
 }
 
 interface Dimensions {
@@ -22,13 +38,17 @@ interface Dimensions {
 
 interface Actions {
   onClearSelection(): void
-  onConnectionEnd(): void
+  onConnectionEnd(x: number, y: number): void
   onConnectionMove(dx: number, dy: number): void
   onConnectionStart(hotspot: Hotspot, x: number, y: number): void
   onNodeDrag(uid: string, dx: number, dy: number): void
   onNodeDragEnd(uid: string): void
   onNodeDragStart(uid: string): void
   onSelect(uid: string): void
+}
+
+interface ViewActions {
+  onDropNodeSchema(schema: NodeSchema, x: number, y: number): void
 }
 
 const GraphLayout = ({
@@ -43,7 +63,9 @@ const GraphLayout = ({
   onNodeDragEnd,
   onSelect,
   selection,
-}: Props & Actions) => (
+  scaleX,
+  scaleY,
+}: LayoutProps & Props & Actions) => (
   <>
     {connections.map((conn) => {
       const uid = `${conn.sourceNodeId}.${conn.sourceName}--${conn.targetNodeId}.${conn.targetName}`
@@ -78,12 +100,14 @@ const GraphLayout = ({
         width={node.width}
         x={node.x}
         y={node.y}
+        scaleX={scaleX}
+        scaleY={scaleY}
       />
     ))}
   </>
 )
 
-const Graph = ({
+const GraphInner = ({
   connections,
   height,
   nodes,
@@ -92,53 +116,65 @@ const Graph = ({
   onConnectionStart,
   onConnectionMove,
   onClearSelection,
+  onDropNodeSchema,
   onNodeDrag,
   onNodeDragStart,
   onNodeDragEnd,
   onSelect,
   selection,
   width,
-}: Dimensions & Props & Actions) => (
-  <Zoom
-    height={height}
-    scaleXMax={4}
-    scaleXMin={0.1}
-    scaleYMax={4}
-    scaleYMin={0.1}
-    width={width}
-  >
-    {({
-      dragEnd,
-      dragMove,
-      dragStart,
-      handleWheel,
-      isDragging,
-      scale,
-      toString,
-    }) => (
-      <svg width={width} height={height} style={{ cursor: isDragging ? 'grabbing' : '' }}>
+  zoom,
+}: Dimensions & Props & Actions & ViewActions & { zoom: any }) => {
+  const dropInfo = useDrop({
+    accept: LIBRARY_NODE_DRAGGED,
+    drop: ({ node }: DragNodeSchemaAction, monitor: any) => {
+      const { x: clientX, y: clientY } = monitor.getClientOffset()
+      const graphElement = document.getElementById('graph')
+      const { top, left } = (
+        graphElement
+          ? graphElement.getBoundingClientRect()
+          : { top: 0, left: 0 }
+      )
+      const { x, y } = zoom.applyInverseToPoint({ x: clientX - left, y: clientY - top })
+      onDropNodeSchema(node, x, y)
+    },
+  })
+
+  return (
+    <div
+      id="graph"
+      style={{
+        borderLeft: '1px solid #0c0c0c',
+        borderRight: '1px solid #0c0c0c',
+        height,
+        overflow: 'hidden',
+        width,
+      }}
+      ref={dropInfo[1]}
+    >
+      <svg width={width} height={height} style={{ cursor: zoom.isDragging ? 'grabbing' : '' }}>
         <rect
           width={width}
           height={height}
           fill={COLOR_BG}
-          onWheel={handleWheel}
-          onMouseDown={dragStart}
-          onMouseMove={dragMove}
+          onWheel={zoom.handleWheel}
+          onMouseDown={zoom.dragStart}
+          onMouseMove={zoom.dragMove}
           onMouseUp={() => {
             onClearSelection()
-            dragEnd()
+            zoom.dragEnd()
           }}
           onMouseLeave={() => {
-            if (!isDragging) return
+            if (!zoom.isDragging) return
             onClearSelection()
-            dragEnd()
+            zoom.dragEnd()
           }}
           onDoubleClick={(event) => {
             const point: any = localPoint(event)
-            scale({ scaleX: 1.1, scaleY: 1.1, point })
+            zoom.scale({ scaleX: 1.1, scaleY: 1.1, point })
           }}
         />
-        <g transform={toString()}>
+        <g transform={zoom.toString()}>
           <GraphLayout
             connections={connections}
             isConnecting={isConnecting}
@@ -152,10 +188,25 @@ const Graph = ({
             onNodeDragEnd={onNodeDragEnd}
             onSelect={onSelect}
             selection={selection}
+            scaleX={zoom.transformMatrix.scaleX}
+            scaleY={zoom.transformMatrix.scaleY}
           />
         </g>
       </svg>
-    )}
+    </div>
+  )
+}
+
+const Graph = (props: Dimensions & Props & Actions & ViewActions) => (
+  <Zoom
+    height={props.height}
+    scaleXMax={4}
+    scaleXMin={0.1}
+    scaleYMax={4}
+    scaleYMin={0.1}
+    width={props.width}
+  >
+    {(zoom) => <GraphInner zoom={zoom} {...props } />}
   </Zoom>
 )
 

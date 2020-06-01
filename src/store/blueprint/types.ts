@@ -5,8 +5,12 @@ import { v4 as uuid4 } from 'uuid'
 import { NodeSchema, PortSchema } from 'store/library/types'
 
 // Action Types
+export const BLUEPRINT_ADDED = '@@blueprint/BLUEPRINT_ADDED'
+
 export const CONNECTION_ADDED = '@@blueprint/CONNECTION_ADDED'
 export const CONNECTION_DELETED = '@@blueprint/CONNECTION_DELETED'
+
+export const BLUEPRINT_EXECUTED = '@@blueprint/EXECUTED'
 
 export const INITIALIZED = '@@blueprint/INITIALIZED'
 
@@ -41,6 +45,7 @@ export interface Hotspot {
 }
 
 export interface Connection {
+  blueprintId: string
   sourceNodeId: string
   sourceName: string
   sourcePlacement: string
@@ -52,6 +57,7 @@ export interface Connection {
 }
 
 export const createConnection = (options: any = {}): Connection => ({
+  blueprintId: '',
   sourceNodeId: '',
   sourceName: '',
   sourcePlacement: 'right',
@@ -193,6 +199,7 @@ export const createNode = (schema: NodeSchema, options: any = {}): Node => {
       placement: port.placement,
     }
     hotspots.push(hotspot)
+    count[hotspot.placement] += 1
   }
 
   const label = titlize(schema.name)
@@ -230,6 +237,12 @@ export const createBlueprint = (options: any = {}): Blueprint => ({
 })
 
 // Actions
+interface AddBlueprintAction {
+  type: typeof BLUEPRINT_ADDED
+  blueprint: Blueprint
+  current: boolean
+}
+
 interface AddConnectionAction {
   type: typeof CONNECTION_ADDED
   connection: Connection
@@ -266,17 +279,23 @@ interface DeleteNodeAction {
   uid: string
 }
 
+interface ExecuteBlueprintAction {
+  type: typeof BLUEPRINT_EXECUTED
+}
+
 interface InitializeAction {
   type: typeof INITIALIZED
 }
 
 export type BlueprintAction =
+  AddBlueprintAction |
   AddConnectionAction |
   AddNodeAction |
   ChangeNodeAction |
   ChangePortAction |
   DeleteConnectionAction |
   DeleteNodeAction |
+  ExecuteBlueprintAction |
   InitializeAction
 
 // State

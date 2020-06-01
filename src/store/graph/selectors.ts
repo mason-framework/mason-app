@@ -3,15 +3,15 @@ import { createSelector } from 'reselect'
 
 import {
   Connection,
-  PositionDelta,
   Node,
+  PositionDelta,
 } from 'store/blueprint/types'
 import {
   getConnections as getBlueprintConnections,
   getNodes as getBlueprintNodes,
   getCurrentNodeIds,
 } from 'store/blueprint/selectors'
-import { GraphState } from 'store/graph/types'
+import { GraphState, Position, ConnectorSuggestion } from 'store/graph/types'
 import { ReduxState } from 'store/types'
 
 function mapToNode(
@@ -46,6 +46,26 @@ export const getGraph = ({ graph }: ReduxState): GraphState => graph
 export const getConnector = ({ graph }: ReduxState): Connection | undefined => graph.connector
 export const getNodeDeltas = (
   ({ graph }: ReduxState): Record<string, PositionDelta> => graph.nodeDeltas
+)
+export const getSuggestionsPosition = (
+  ({ graph }: ReduxState): Position => graph.suggestionsPosition
+)
+export const getSuggestionsSearch = (
+  ({ graph }: ReduxState): string => graph.suggestionsSearch
+)
+
+export const getSuggestions = createSelector(
+  getGraph,
+  getSuggestionsSearch,
+  (graph, terms): Array<ConnectorSuggestion> | undefined => {
+    if (!graph.suggestions) return undefined
+    return (!terms ? graph.suggestions : graph.suggestions.filter(
+      ({ schema, name }) => (
+        name.toLowerCase().includes(terms.toLowerCase())
+        || schema.name.toLowerCase().includes(terms.toLowerCase())
+      ),
+    ))
+  },
 )
 
 export const getIsConnecting = createSelector(

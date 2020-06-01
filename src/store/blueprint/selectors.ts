@@ -39,7 +39,7 @@ export const getBreadcrumbs = createSelector(
     let blueprint = blueprints[uid]
     const breadcrumbs = []
     while (blueprint) {
-      breadcrumbs.push(blueprint.uid)
+      breadcrumbs.push(blueprint.label)
       blueprint = blueprints[blueprint.parentId]
     }
     return breadcrumbs.reverse()

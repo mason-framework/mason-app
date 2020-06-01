@@ -7,15 +7,45 @@ import {
   CONNECTOR_STOPPED,
   NODE_DELTA_CLEARED,
   NODE_MOVE_FINISHED,
-  NODE_SCHEMA_DROPPED,
   NODE_MOVED,
+  NODE_SCHEMA_DROPPED,
+  SUGGESTION_PICKED,
+  SUGGESTIONS_CLEARED,
+  SUGGESTIONS_SEARCHED,
+  SUGGESTIONS_SHOWN,
   GraphAction,
+  ConnectorSuggestion,
 } from 'store/graph/types'
 
 
 export const clearNodeDelta = (uid: string): GraphAction => ({
   type: NODE_DELTA_CLEARED,
   uid,
+})
+
+export const clearSuggestions = (): GraphAction => ({
+  type: SUGGESTIONS_CLEARED,
+})
+
+export const pickSuggestion = (suggestion: ConnectorSuggestion): GraphAction => ({
+  type: SUGGESTION_PICKED,
+  suggestion,
+})
+
+export const showSuggestions = (
+  suggestions: Array<ConnectorSuggestion>,
+  x: number,
+  y: number,
+): GraphAction => ({
+  type: SUGGESTIONS_SHOWN,
+  suggestions,
+  x,
+  y,
+})
+
+export const searchSuggestions = (terms: string): GraphAction => ({
+  type: SUGGESTIONS_SEARCHED,
+  terms,
 })
 
 export const finishConnector = (): GraphAction => ({
@@ -42,8 +72,10 @@ export const startConnector = (hotspot: Hotspot, x: number, y: number): GraphAct
   y,
 })
 
-export const stopConnector = (): GraphAction => ({
+export const stopConnector = (x: number, y: number): GraphAction => ({
   type: CONNECTOR_STOPPED,
+  x,
+  y,
 })
 
 export const dropNodeSchema = (schema: NodeSchema, x: number, y: number): GraphAction => ({

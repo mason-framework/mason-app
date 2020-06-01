@@ -62,6 +62,7 @@ const EDITORS: Record<string, (props: Props & Actions) => React.ReactElement> = 
   float: NumberEditor,
   int: NumberEditor,
   str: StringEditor,
+  'typing.Any': StringEditor,
 }
 
 const PortFormItem = ({ connectionHint, onChange, port }: FormProps & Actions) => {

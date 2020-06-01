@@ -3,29 +3,33 @@ import React from 'react'
 import { AutoSizer } from 'react-virtualized'
 import { connect } from 'react-redux'
 import { createStructuredSelector } from 'reselect'
-import { useDrop } from 'react-dnd'
 import { HotKeys } from 'react-hotkeys'
 
+import ConnectorSuggestionMenu from 'components/ConnectorSuggestionMenu'
 import Graph from 'components/Graph'
 
-import {
-  LIBRARY_NODE_DRAGGED,
-  DragNodeSchemaAction,
-  NodeSchema,
-} from 'store/library/types'
+import { NodeSchema } from 'store/library/types'
 
 import {
+  clearSuggestions,
   dropNodeSchema,
   finishMoveNode,
-  moveNode,
-  startConnector,
   moveConnector,
+  moveNode,
+  pickSuggestion,
+  searchSuggestions,
+  startConnector,
   stopConnector,
 } from 'store/graph/actions'
+
+import { ConnectorSuggestion, Position } from 'store/graph/types'
 
 import {
   addSelection,
   clearSelection,
+  copySelection,
+  cutSelection,
+  pasteSelection,
   deleteSelection,
 } from 'store/selection/actions'
 
@@ -33,6 +37,9 @@ import {
   getConnections,
   getIsConnecting,
   getNodes,
+  getSuggestions,
+  getSuggestionsPosition,
+  getSuggestionsSearch,
 } from 'store/graph/selectors'
 
 import {
@@ -43,113 +50,140 @@ import { Node, Connection, Hotspot } from 'store/blueprint/types'
 import { ReduxState } from 'store/types'
 
 interface Props {
+  connections: Array<Connection>
   isConnecting: boolean
   nodes: Array<Node>
-  connections: Array<Connection>
   selection: Array<string>
+  suggestions?: Array<ConnectorSuggestion>
+  suggestionsPosition: Position
+  suggestionsSearch: string
 }
 
 interface Actions {
   onClearSelection(): void
-  onConnectionEnd(): void
+  onClearSuggestions(): void
+  onConnectionEnd(x: number, y: number): void
   onConnectionMove(dx: number, dy: number): void
   onConnectionStart(hotspot: Hotspot, x: number, y: number): void
+  onCopy(): void
+  onCut(): void
   onDelete(): void
-  onDropNodeSchema(nodeSchema: NodeSchema, x: number, y: number): void
+  onDropNodeSchema(schema: NodeSchema, x: number, y: number): void
   onNodeDrag(uid: string, dx: number, dy: number): void
   onNodeDragEnd(uid: string): void
   onNodeDragStart(uid: string): void
+  onPaste(): void
   onSelect(uid: string): void
+  onSuggestionPicked(suggestion: ConnectorSuggestion): void
+  onSuggestionsSearch(terms: string): void
 }
 
 const GraphView = ({
   connections,
   isConnecting,
   nodes,
+  onClearSelection,
+  onClearSuggestions,
   onConnectionEnd,
   onConnectionMove,
   onConnectionStart,
-  onClearSelection,
+  onCopy,
+  onCut,
   onDelete,
   onDropNodeSchema,
   onNodeDrag,
-  onNodeDragStart,
   onNodeDragEnd,
+  onNodeDragStart,
+  onPaste,
   onSelect,
+  onSuggestionPicked,
+  onSuggestionsSearch,
   selection,
-}: Props & Actions) => {
-  const dropInfo = useDrop({
-    accept: LIBRARY_NODE_DRAGGED,
-    drop: ({ node }: DragNodeSchemaAction, monitor: any) => {
-      const { x, y } = monitor.getClientOffset()
-      const graphElement = document.getElementById('graph')
-      const { top, left } = (
-        graphElement
-          ? graphElement.getBoundingClientRect()
-          : { top: 0, left: 0 }
+  suggestions,
+  suggestionsPosition,
+  suggestionsSearch,
+}: Props & Actions) => (
+  <>
+    <HotKeys
+      keyMap={{
+        DELETE_NODE: ['del', 'backspace'],
+        COPY: ['cmd+c'],
+        CUT: ['cmd+x'],
+        PASTE: ['cmd+v'],
+      }}
+      handlers={{
+        DELETE_NODE: onDelete,
+        COPY: onCopy,
+        CUT: onCut,
+        PASTE: onPaste,
+      }}
+    >
+      <AutoSizer>
+        {({ width, height }) => (
+          <Graph
+            connections={connections}
+            height={10000}
+            isConnecting={isConnecting}
+            nodes={nodes}
+            onConnectionEnd={onConnectionEnd}
+            onConnectionMove={onConnectionMove}
+            onConnectionStart={onConnectionStart}
+            onClearSelection={onClearSelection}
+            onDropNodeSchema={onDropNodeSchema}
+            onNodeDrag={onNodeDrag}
+            onNodeDragStart={onNodeDragStart}
+            onNodeDragEnd={onNodeDragEnd}
+            onSelect={onSelect}
+            selection={selection}
+            width={10000}
+          />
+        )}
+      </AutoSizer>
+    </HotKeys>
+    {(
+      !!suggestions
+      && (
+        <ConnectorSuggestionMenu
+          onClose={onClearSuggestions}
+          onSuggestionPicked={onSuggestionPicked}
+          onSearch={onSuggestionsSearch}
+          suggestions={suggestions}
+          searchTerms={suggestionsSearch}
+          x={suggestionsPosition.x}
+          y={suggestionsPosition.y}
+        />
       )
-      onDropNodeSchema(node, x - left, y - top)
-    },
-  })
-  return (
-    <AutoSizer>
-      {({ width, height }) => (
-        <div
-          id="graph"
-          style={{
-            borderLeft: '1px solid #0c0c0c',
-            borderRight: '1px solid #0c0c0c',
-            height,
-            overflow: 'hidden',
-            width,
-          }}
-          ref={dropInfo[1]}
-        >
-          <HotKeys
-            keyMap={{ DELETE_NODE: ['del', 'backspace'] }}
-            handlers={{ DELETE_NODE: onDelete }}
-          >
-            <Graph
-              connections={connections}
-              height={10000}
-              isConnecting={isConnecting}
-              nodes={nodes}
-              onConnectionEnd={onConnectionEnd}
-              onConnectionMove={onConnectionMove}
-              onConnectionStart={onConnectionStart}
-              onClearSelection={onClearSelection}
-              onNodeDrag={onNodeDrag}
-              onNodeDragStart={onNodeDragStart}
-              onNodeDragEnd={onNodeDragEnd}
-              onSelect={onSelect}
-              selection={selection}
-              width={10000}
-            />
-          </HotKeys>
-        </div>
-      )}
-    </AutoSizer>
-  )
-}
+    )}
+  </>
+)
 
 const selector = createStructuredSelector<ReduxState, Props>({
   connections: getConnections,
   isConnecting: getIsConnecting,
   nodes: getNodes,
   selection: getSelection,
+  suggestions: getSuggestions,
+  suggestionsPosition: getSuggestionsPosition,
+  suggestionsSearch: getSuggestionsSearch,
 })
 
 const actions = {
-  onConnectionStart: startConnector,
+  onClearSelection: clearSelection,
+  onClearSuggestions: clearSuggestions,
   onConnectionEnd: stopConnector,
   onConnectionMove: moveConnector,
-  onClearSelection: clearSelection,
+  onConnectionStart: startConnector,
+  onCopy: copySelection,
+  onCut: cutSelection,
+  onDelete: deleteSelection,
   onDropNodeSchema: dropNodeSchema,
   onNodeDrag: moveNode,
-  onNodeDragStart: addSelection,
   onNodeDragEnd: finishMoveNode,
-  onDelete: deleteSelection,
+  onNodeDragStart: addSelection,
+  onPaste: pasteSelection,
   onSelect: addSelection,
+  onSuggestionPicked: pickSuggestion,
+  onSuggestionsSearch: searchSuggestions,
 }
 
 export default connect(selector, actions)(GraphView);

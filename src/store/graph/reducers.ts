@@ -2,8 +2,11 @@ import {
   CONNECTOR_FINISHED,
   CONNECTOR_MOVED,
   CONNECTOR_STARTED,
-  NODE_MOVED,
   NODE_DELTA_CLEARED,
+  NODE_MOVED,
+  SUGGESTIONS_CLEARED,
+  SUGGESTIONS_SEARCHED,
+  SUGGESTIONS_SHOWN,
   GraphAction,
   GraphState,
   createGraphState,
@@ -38,6 +41,7 @@ function makeConnector(
 ): Connection {
   const isSource = SOURCE_PLACEMENTS.includes(placement)
   return {
+    blueprintId: '',
     sourceNodeId: isSource ? nodeId : '',
     sourceName: isSource ? name : '',
     sourcePlacement: isSource ? placement : INVERSE_PLACEMENT[placement],
@@ -122,6 +126,17 @@ export function graphReducer(
         return { ...state, connector: moveConnector(connector, dx, dy) }
       }
       return state
+    }
+    case SUGGESTIONS_SEARCHED: {
+      const { terms } = action
+      return { ...state, suggestionsSearch: terms }
+    }
+    case SUGGESTIONS_SHOWN: {
+      const { suggestions, x, y } = action
+      return { ...state, suggestions, suggestionsPosition: { x, y } }
+    }
+    case SUGGESTIONS_CLEARED: {
+      return { ...state, suggestions: undefined, connector: undefined }
     }
     case CONNECTOR_STARTED: {
       const { hotspot, x, y } = action

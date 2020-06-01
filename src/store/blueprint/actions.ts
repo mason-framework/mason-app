@@ -1,4 +1,6 @@
 import {
+  BLUEPRINT_ADDED,
+  BLUEPRINT_EXECUTED,
   CONNECTION_ADDED,
   CONNECTION_DELETED,
   INITIALIZED,
@@ -7,6 +9,7 @@ import {
   NODE_DELETED,
   PORT_CHANGED,
   BlueprintAction,
+  Blueprint,
   Connection,
   Node,
 } from 'store/blueprint/types'
@@ -15,6 +18,13 @@ import {
 export const addConnection = (connection: Connection): BlueprintAction => ({
   type: CONNECTION_ADDED,
   connection,
+})
+
+
+export const addBlueprint = (blueprint: Blueprint, current: boolean = false) => ({
+  type: BLUEPRINT_ADDED,
+  blueprint,
+  current,
 })
 
 
@@ -58,6 +68,10 @@ export const deleteConnection = (
 export const deleteNode = (uid: string): BlueprintAction => ({
   type: NODE_DELETED,
   uid,
+})
+
+export const executeBlueprint = (): BlueprintAction => ({
+  type: BLUEPRINT_EXECUTED,
 })
 
 

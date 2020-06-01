@@ -20,6 +20,18 @@ export const getLibrary = ({ library }: ReduxState): LibraryState => library
 export const getNodes = ({ library }: ReduxState): Array<NodeSchema> => library.nodes
 export const getSearchTerms = ({ library }: ReduxState): string => library.searchTerms
 
+export const getNodeMap = createSelector(
+  getNodes,
+  (nodes): Record<string, NodeSchema> => _reduce(
+    nodes,
+    (acc: Record<string, NodeSchema>, schema: NodeSchema): Record<string, NodeSchema> => {
+      acc[`${schema.group}.${schema.name}`] = schema
+      return acc
+    },
+    {},
+  ),
+)
+
 export const getNodeTree = createSelector(
   getNodes,
   getSearchTerms,

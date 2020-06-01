@@ -17,16 +17,18 @@ interface Props {
   height: number
   hotspots: Array<Hotspot>
   isConnecting: boolean
+  label: string
   selected: boolean
   uid: string
   width: number
   x: number
   y: number
-  label: string
+  scaleX: number
+  scaleY: number
 }
 
 interface Actions {
-  onConnectionEnd(): void
+  onConnectionEnd(x: number, y: number): void
   onConnectionMove(dx: number, dy: number): void
   onConnectionStart(hotspot: Hotspot, x: number, y: number): void
   onDrag(uid: string, dx: number, dy: number): void
@@ -40,24 +42,26 @@ const GraphNodeItem = ({
   height,
   hotspots,
   isConnecting,
+  label,
   onConnectionEnd,
   onConnectionMove,
   onConnectionStart,
   onDrag,
-  onDragStart,
   onDragEnd,
+  onDragStart,
   selected,
-  label,
   uid,
   width,
   x,
   y,
+  scaleX,
+  scaleY,
 }: Props & Actions) => (
   <Drag
     width={dragWidth}
     height={dragHeight}
     onDragStart={() => onDragStart(uid)}
-    onDragMove={({ dx, dy }) => onDrag(uid, dx, dy)}
+    onDragMove={({ dx, dy }) => onDrag(uid, dx / scaleX, dy / scaleY)}
     onDragEnd={() => onDragEnd(uid)}
     resetOnStart
   >
@@ -69,16 +73,13 @@ const GraphNodeItem = ({
       dx,
       dy,
     }) => {
-      let stroke = COLOR_DEFAULT_STROKE
-      let nodeX = x
-      let nodeY = y
-      if (isDragging) {
-        stroke = COLOR_DRAG_STROKE
-        nodeX += dx
-        nodeY += dy
-      } else if (selected) {
-        stroke = COLOR_SELECTED_STROKE
-      }
+      const defaultStroke = selected ? COLOR_SELECTED_STROKE : COLOR_DEFAULT_STROKE
+      const stroke = isDragging ? COLOR_DRAG_STROKE : defaultStroke
+      const {
+        x: nodeX,
+        y: nodeY,
+      } = isDragging ? { x: x + (dx / scaleX), y: y + (dy / scaleY) } : { x, y }
+
       return (
         <>
           <g transform={`translate(${nodeX}, ${nodeY})`}>
@@ -121,6 +122,8 @@ const GraphNodeItem = ({
               transform={`translate(${nodeX}, ${nodeY})`}
               x={hotspot.offsetX}
               y={hotspot.offsetY}
+              scaleX={scaleX}
+              scaleY={scaleY}
             />
           ))}
         </>
