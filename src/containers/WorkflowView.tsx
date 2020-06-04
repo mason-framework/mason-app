@@ -5,21 +5,60 @@ import { connect } from 'react-redux'
 import { createStructuredSelector } from 'reselect'
 
 import LogPanel from 'components/LogPanel'
+import ProfilePanel from 'components/ProfilePanel'
+import RunPanel from 'components/RunPanel'
 
 import { ReduxState } from 'store/types'
-import { closeWorkflow } from 'store/app/actions'
-import { clearLogs, changeLevel } from 'store/logs/actions'
-import { getLogs, getLevel as getLogLevel } from 'store/logs/selectors'
+import { closeWorkflow, changeWorkflowTab } from 'store/app/actions'
+import { getWorkflowTab } from 'store/app/selectors'
+import {
+  clearLogs,
+  changeLevel,
+  toggleLogs,
+} from 'store/logs/actions'
+import {
+  getLogs,
+  getEnabled as getLogsEnabled,
+  getLevel as getLogLevel,
+} from 'store/logs/selectors'
+import {
+  clearEvents,
+  changeEnabled as changeProfile,
+} from 'store/profile/actions'
+import {
+  getRequestTime,
+  getTotalTime,
+  getTimeline,
+  getEnabled as getProfileEnabled,
+} from 'store/profile/selectors'
+import { getCurrentRunId, getRuns } from 'store/runs/selectors'
+import { clearRuns, startRun } from 'store/runs/actions'
+import { Run } from 'store/runs/types'
+import { NodeTimeline } from 'store/profile/types'
 
 interface Props {
+  currentRunId: string
+  logsEnabled: boolean
   logs: Array<string>
   logLevel: string
+  profileEnabled: boolean
+  profileTimelines: Array<NodeTimeline>
+  profileTotalTime: number
+  profileRequestTime: number
+  runs: Array<Run>
+  tab: string
 }
 
 interface Actions {
   onClearLogs(): void
   onClose(): void
   onChangeLogLevel(level: string): void
+  onClearEvents(): void
+  onRun(): void
+  onClearRuns(): void
+  onTabChange(tab: string): void
+  onToggleLogs(): void
+  onToggleProfile(enabled: boolean): void
 }
 
 const TAB_PANE_STYLE = {
@@ -30,14 +69,30 @@ const TAB_PANE_STYLE = {
 }
 
 const WorkflowView = ({
+  currentRunId,
+  logsEnabled,
   logs,
   logLevel,
+  profileEnabled,
+  profileRequestTime,
+  profileTimelines,
+  profileTotalTime,
+  runs,
+  onClearEvents,
+  onClearRuns,
   onClearLogs,
   onClose,
   onChangeLogLevel,
+  onTabChange,
+  onToggleLogs,
+  onToggleProfile,
+  onRun,
+  tab,
 }: Props & Actions) => (
   <div style={{ position: 'relative' }}>
     <Tabs
+      defaultActiveKey={tab}
+      onChange={onTabChange}
       type="card"
       tabBarGutter={0}
       tabBarStyle={{ marginBottom: 0 }}
@@ -45,33 +100,60 @@ const WorkflowView = ({
         <Button onClick={onClose} type="link" ghost><CloseOutlined /></Button>
       )}
     >
+      <Tabs.TabPane tab="Runs" key="runs" style={TAB_PANE_STYLE}>
+        <RunPanel
+          currentId={currentRunId}
+          runs={runs}
+          onClear={onClearRuns}
+          onRun={onRun}
+        />
+      </Tabs.TabPane>
       <Tabs.TabPane tab="Logging" key="logging" style={TAB_PANE_STYLE}>
         <LogPanel
+          enabled={logsEnabled}
           logs={logs}
           onClear={onClearLogs}
           level={logLevel}
           onChangeLevel={onChangeLogLevel}
+          onToggle={onToggleLogs}
         />
       </Tabs.TabPane>
-      <Tabs.TabPane tab="Runs" key="execution">
-        B
-      </Tabs.TabPane>
-      <Tabs.TabPane tab="Console" key="console">
-        C
+      <Tabs.TabPane tab="Profiling" key="profiling" style={TAB_PANE_STYLE}>
+        <ProfilePanel
+          onClear={onClearEvents}
+          onToggle={onToggleProfile}
+          enabled={profileEnabled}
+          timelines={profileTimelines}
+          totalTime={Math.max(profileTotalTime, profileRequestTime)}
+        />
       </Tabs.TabPane>
     </Tabs>
   </div>
 )
 
 const selector = createStructuredSelector<ReduxState, Props>({
+  currentRunId: getCurrentRunId,
+  logsEnabled: getLogsEnabled,
   logs: getLogs,
   logLevel: getLogLevel,
+  profileEnabled: getProfileEnabled,
+  profileTotalTime: getTotalTime,
+  profileRequestTime: getRequestTime,
+  profileTimelines: getTimeline,
+  runs: getRuns,
+  tab: getWorkflowTab,
 })
 
 const actions = {
+  onClearRuns: clearRuns,
   onClearLogs: clearLogs,
   onClose: closeWorkflow,
   onChangeLogLevel: changeLevel,
+  onClearEvents: clearEvents,
+  onTabChange: changeWorkflowTab,
+  onToggleLogs: toggleLogs,
+  onToggleProfile: changeProfile,
+  onRun: startRun,
 }
 
 export default connect(selector, actions)(WorkflowView)

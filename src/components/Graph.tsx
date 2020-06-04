@@ -20,6 +20,7 @@ interface Point {
 }
 
 interface Props {
+  activeNodeIds: Array<string>
   connections: Array<Connection>
   isConnecting: boolean
   nodes: Array<Node>
@@ -52,6 +53,7 @@ interface ViewActions {
 }
 
 const GraphLayout = ({
+  activeNodeIds,
   connections,
   isConnecting,
   nodes,
@@ -94,7 +96,7 @@ const GraphLayout = ({
         onDrag={onNodeDrag}
         onDragStart={onNodeDragStart}
         onDragEnd={onNodeDragEnd}
-        selected={selection.includes(node.uid)}
+        selected={selection.includes(node.uid) || activeNodeIds.includes(node.uid)}
         label={node.label}
         uid={node.uid}
         width={node.width}
@@ -108,6 +110,7 @@ const GraphLayout = ({
 )
 
 const GraphInner = ({
+  activeNodeIds,
   connections,
   height,
   nodes,
@@ -176,6 +179,7 @@ const GraphInner = ({
         />
         <g transform={zoom.toString()}>
           <GraphLayout
+            activeNodeIds={activeNodeIds}
             connections={connections}
             isConnecting={isConnecting}
             nodes={nodes}

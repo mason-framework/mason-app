@@ -1,6 +1,5 @@
 import React from 'react'
 
-import { AutoSizer } from 'react-virtualized'
 import { connect } from 'react-redux'
 import { createStructuredSelector } from 'reselect'
 import { HotKeys } from 'react-hotkeys'
@@ -21,6 +20,10 @@ import {
   startConnector,
   stopConnector,
 } from 'store/graph/actions'
+
+import {
+  getActiveNodeIds,
+} from 'store/profile/selectors'
 
 import { ConnectorSuggestion, Position } from 'store/graph/types'
 
@@ -50,6 +53,7 @@ import { Node, Connection, Hotspot } from 'store/blueprint/types'
 import { ReduxState } from 'store/types'
 
 interface Props {
+  activeNodeIds: Array<string>
   connections: Array<Connection>
   isConnecting: boolean
   nodes: Array<Node>
@@ -79,6 +83,7 @@ interface Actions {
 }
 
 const GraphView = ({
+  activeNodeIds,
   connections,
   isConnecting,
   nodes,
@@ -118,27 +123,24 @@ const GraphView = ({
         PASTE: onPaste,
       }}
     >
-      <AutoSizer>
-        {({ width, height }) => (
-          <Graph
-            connections={connections}
-            height={10000}
-            isConnecting={isConnecting}
-            nodes={nodes}
-            onConnectionEnd={onConnectionEnd}
-            onConnectionMove={onConnectionMove}
-            onConnectionStart={onConnectionStart}
-            onClearSelection={onClearSelection}
-            onDropNodeSchema={onDropNodeSchema}
-            onNodeDrag={onNodeDrag}
-            onNodeDragStart={onNodeDragStart}
-            onNodeDragEnd={onNodeDragEnd}
-            onSelect={onSelect}
-            selection={selection}
-            width={10000}
-          />
-        )}
-      </AutoSizer>
+      <Graph
+        activeNodeIds={activeNodeIds}
+        connections={connections}
+        height={10000}
+        isConnecting={isConnecting}
+        nodes={nodes}
+        onConnectionEnd={onConnectionEnd}
+        onConnectionMove={onConnectionMove}
+        onConnectionStart={onConnectionStart}
+        onClearSelection={onClearSelection}
+        onDropNodeSchema={onDropNodeSchema}
+        onNodeDrag={onNodeDrag}
+        onNodeDragStart={onNodeDragStart}
+        onNodeDragEnd={onNodeDragEnd}
+        onSelect={onSelect}
+        selection={selection}
+        width={10000}
+      />
     </HotKeys>
     {(
       !!suggestions
@@ -158,6 +160,7 @@ const GraphView = ({
 )
 
 const selector = createStructuredSelector<ReduxState, Props>({
+  activeNodeIds: getActiveNodeIds,
   connections: getConnections,
   isConnecting: getIsConnecting,
   nodes: getNodes,

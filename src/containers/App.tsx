@@ -12,10 +12,25 @@ import DndBackend from 'react-dnd-html5-backend'
 import { ActionCreators } from 'redux-undo'
 import { HotKeys } from 'react-hotkeys'
 
-import { getLocale, getMessages, getWorkflowVisible } from 'store/app/selectors'
-import { initialize, closeWorkflow, openWorkflow } from 'store/app/actions'
-import { executeBlueprint } from 'store/blueprint/actions'
+import {
+  getConfig,
+  getConfigVisible,
+  getLocale,
+  getMessages,
+  getWorkflowVisible,
+} from 'store/app/selectors'
+import {
+  changeConfig,
+  closeWorkflow,
+  initialize,
+  openWorkflow,
+  toggleConfig,
+} from 'store/app/actions'
+import { Config } from 'store/app/types'
+import { startRun } from 'store/runs/actions'
 import { ReduxState } from 'store/types'
+
+import ConfigModal from 'components/ConfigModal'
 
 import BlueprintNavBar from 'containers/BlueprintNavBar'
 import MenuBar from 'containers/MenuBar'
@@ -28,18 +43,22 @@ const { Footer, Sider, Content } = Layout
 
 
 interface Props {
+  config: Config
+  configVisible: boolean
   locale: string
   messages: Record<string, string>
   workflowVisible: boolean
 }
 
 interface Actions {
+  onCloseConfig(): void
   onCloseWorkflow(): void
-  onOpenWorkflow(): void
-  onInitialize(): void
-  onUndo(): void
-  onRedo(): void
   onExecute(): void
+  onInitialize(): void
+  onOpenWorkflow(tab: string): void
+  onRedo(): void
+  onSaveConfig(config: Config): void
+  onUndo(): void
 }
 
 
@@ -51,12 +70,16 @@ class App extends Component<Props & Actions> {
 
   render() {
     const {
+      config,
+      configVisible,
       locale,
       messages,
-      onUndo,
-      onRedo,
+      onCloseConfig,
       onExecute,
       onOpenWorkflow,
+      onRedo,
+      onSaveConfig,
+      onUndo,
       workflowVisible,
     } = this.props
     return (
@@ -97,13 +120,20 @@ class App extends Component<Props & Actions> {
               ) : (
                 <Footer style={{ background: '#141414', borderTop: '1px solid black', padding: 3 }}>
                   <Space>
-                    <Button type="link" ghost onClick={onOpenWorkflow}>Logging</Button>
-                    <Button type="link" ghost onClick={onOpenWorkflow}>Runs</Button>
-                    <Button type="link" ghost onClick={onOpenWorkflow}>Console</Button>
+                    <Button type="link" ghost onClick={() => onOpenWorkflow('runs')}>Runs</Button>
+                    <Button type="link" ghost onClick={() => onOpenWorkflow('logging')}>Logging</Button>
+                    <Button type="link" ghost onClick={() => onOpenWorkflow('profiling')}>Profiling</Button>
                   </Space>
                 </Footer>
               )}
             </Layout>
+            <ConfigModal
+              title="Preferences"
+              config={config}
+              onClose={onCloseConfig}
+              onSave={onSaveConfig}
+              visible={configVisible}
+            />
           </HotKeys>
         </DndProvider>
       </IntlProvider>
@@ -112,18 +142,22 @@ class App extends Component<Props & Actions> {
 }
 
 const selector = createStructuredSelector<ReduxState, Props>({
+  config: getConfig,
+  configVisible: getConfigVisible,
   locale: getLocale,
   messages: getMessages,
   workflowVisible: getWorkflowVisible,
 })
 
 const actions: Actions = {
-  onInitialize: initialize,
-  onUndo: ActionCreators.undo,
-  onRedo: ActionCreators.redo,
+  onCloseConfig: toggleConfig,
   onCloseWorkflow: closeWorkflow,
+  onExecute: startRun,
+  onInitialize: initialize,
   onOpenWorkflow: openWorkflow,
-  onExecute: executeBlueprint,
+  onRedo: ActionCreators.redo,
+  onSaveConfig: changeConfig,
+  onUndo: ActionCreators.undo,
 }
 
 export default connect(selector, actions)(App)

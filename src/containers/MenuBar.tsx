@@ -15,8 +15,12 @@ import {
   UpSquareOutlined,
 } from '@ant-design/icons'
 
-import { toggleWorkflow } from 'store/app/actions'
-import { initialize, executeBlueprint } from 'store/blueprint/actions'
+import {
+  toggleConfig,
+  toggleWorkflow,
+} from 'store/app/actions'
+import { initialize } from 'store/blueprint/actions'
+import { startRun } from 'store/runs/actions'
 import {
   copySelection,
   cutSelection,
@@ -36,6 +40,7 @@ interface Actions {
   onPaste(): void
   onUndo(): void
   onRedo(): void
+  onToggleConfig(): void
   onToggleWorkflow(): void
 }
 
@@ -69,7 +74,12 @@ const Item = ({ icon, title, hint }: ItemProps) => (
     <span style={{ flex: 1 }}>
       {title}
     </span>
-    <small>{hint ? `(${hint})` : ''}</small>
+    {!!hint && (
+      <>
+        <span style={{ width: 16 }} />
+        <small>{hint}</small>
+      </>
+    )}
   </span>
 )
 
@@ -85,11 +95,16 @@ class MenuBar extends React.Component<Actions> {
       onPaste,
       onUndo,
       onRedo,
+      onToggleConfig,
       onToggleWorkflow,
     } = this.props
     switch (key) {
       case NEW_FILE_ACTION: {
         onInitialize()
+        break
+      }
+      case SHOW_PREFS_ACTION: {
+        onToggleConfig()
         break
       }
       case UNDO_ACTION: {
@@ -169,7 +184,7 @@ class MenuBar extends React.Component<Actions> {
           <Menu.Item key="resetZoomAction">Reset Zoom</Menu.Item>
           <Divider style={{ margin: 0 }} />
           <Menu.Item key={TOGGLE_WORKFLOW_ACTION}>
-            <Item icon={<UpSquareOutlined />} title="Toggle Workflow" />
+            <Item icon={<UpSquareOutlined />} title="Toggle Workflow View" />
           </Menu.Item>
         </SubMenu>
         <SubMenu title="Run">
@@ -184,12 +199,13 @@ class MenuBar extends React.Component<Actions> {
 
 const actions = {
   onDeleteSelection: deleteSelection,
-  onExecute: executeBlueprint,
+  onExecute: startRun,
   onInitialize: initialize,
   onRedo: ActionCreators.redo,
   onCopy: copySelection,
   onCut: cutSelection,
   onPaste: pasteSelection,
+  onToggleConfig: toggleConfig,
   onToggleWorkflow: toggleWorkflow,
   onUndo: ActionCreators.undo,
 }

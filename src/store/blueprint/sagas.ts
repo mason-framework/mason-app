@@ -13,29 +13,13 @@ import {
   initialize,
 } from 'store/blueprint/actions'
 
-import * as api from 'store/blueprint/api'
 import {
-  openWorkflow,
-} from 'store/app/actions'
-import {
-  getPresent,
-} from 'store/blueprint/selectors'
-import {
-  BLUEPRINT_EXECUTED,
   INITIALIZED,
   createBlueprint,
   createNode,
 } from 'store/blueprint/types'
-import { getLevel as getLogLevel } from 'store/logs/selectors'
 import { getNodeMap } from 'store/library/selectors'
 
-
-function* executeBlueprintSaga() {
-  yield put(openWorkflow())
-  const level = yield select(getLogLevel)
-  const state = yield select(getPresent)
-  yield call(api.executeBlueprint, 'http://localhost:8000', state, level)
-}
 
 function* initializeBlueprintSaga() {
   const blueprint = yield call(createBlueprint)
@@ -54,6 +38,5 @@ export function* blueprintSaga(): SagaIterator<void> {
   yield all([
     takeEvery(LIBRARY_LOADED, initializeSaga),
     takeEvery(INITIALIZED, initializeBlueprintSaga),
-    takeEvery(BLUEPRINT_EXECUTED, executeBlueprintSaga),
   ])
 }

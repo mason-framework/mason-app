@@ -12,6 +12,10 @@ import { libraryReducer } from 'store/library/reducers'
 import { librarySaga } from 'store/library/sagas'
 import { logsReducer } from 'store/logs/reducers'
 import { logsSaga } from 'store/logs/sagas'
+import { profileReducer } from 'store/profile/reducers'
+import { profileSaga } from 'store/profile/sagas'
+import { runsReducer } from 'store/runs/reducers'
+import { runsSaga } from 'store/runs/sagas'
 import { selectionReducer } from 'store/selection/reducers'
 import { selectionSaga } from 'store/selection/sagas'
 
@@ -21,7 +25,9 @@ const reducers = combineReducers({
   graph: graphReducer,
   library: libraryReducer,
   logs: logsReducer,
+  profile: profileReducer,
   selection: selectionReducer,
+  runs: runsReducer,
 })
 
 const sagaMiddleware = createSagaMiddleware();
@@ -31,9 +37,11 @@ const store = createStore(
 )
 
 sagaMiddleware.run(librarySaga)
+sagaMiddleware.run(logsSaga)
+sagaMiddleware.run(profileSaga)
+sagaMiddleware.run(runsSaga)
 sagaMiddleware.run(blueprintSaga)
 sagaMiddleware.run(graphSaga)
-sagaMiddleware.run(logsSaga)
 sagaMiddleware.run(selectionSaga)
 
 export default store

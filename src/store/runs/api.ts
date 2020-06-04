@@ -1,6 +1,6 @@
 import _reduce from 'lodash/reduce'
 import _values from 'lodash/values'
-import axios from 'axios'
+import { getClient } from 'store/app/api'
 
 import {
   Blueprint as ServerBlueprint,
@@ -15,6 +15,13 @@ import {
   Node,
   Port,
 } from 'store/blueprint/types'
+import { finishRun } from 'store/runs/actions'
+import {
+  STATUS_OK,
+  STATUS_ERROR,
+  ExecutionResult,
+  RunAction,
+} from 'store/runs/types'
 
 
 function getRoot({ blueprints }: BlueprintState): Blueprint | undefined {
@@ -86,7 +93,7 @@ const createNodes = (
 )
 
 
-function createBlueprint(state: BlueprintState): ServerBlueprint | undefined {
+export function createBlueprint(state: BlueprintState): ServerBlueprint | undefined {
   const root = getRoot(state)
   if (!root) { return undefined }
 
@@ -103,23 +110,39 @@ function createBlueprint(state: BlueprintState): ServerBlueprint | undefined {
 }
 
 
-export async function executeBlueprint(
-  baseUrl: string,
-  state: BlueprintState,
+export async function runBlueprint(
+  blueprint: ServerBlueprint,
+  uid: string,
+  inputs: Record<string, any> | undefined,
   level: string,
-): Promise<void> {
-  const bp = createBlueprint(state)
-  if (bp) {
-    const data = {
-      blueprint: ServerBlueprint.toJSON(bp),
-      level,
+): Promise<RunAction | undefined> {
+  const data = {
+    blueprint: ServerBlueprint.toJSON(blueprint),
+    inputs,
+    level,
+  }
+  const client = getClient()
+  const response = client.post(
+    '/execute',
+    data,
+    {
+      headers: {
+        'X-Request-ID': uid,
+      },
+    },
+  )
+  try {
+    const { data: responseData } = await response
+    const result: ExecutionResult = {
+      output: responseData,
+      error: undefined,
     }
-    const response = axios.post(`${baseUrl}/execute`, data)
-    try {
-      const { data } = await response
-      console.log(data)
-    } catch (error) {
-      console.log(error)
+    return finishRun(uid, STATUS_OK, result)
+  } catch (error) {
+    const result: ExecutionResult = {
+      output: undefined,
+      error,
     }
+    return finishRun(uid, STATUS_ERROR, result)
   }
 }
