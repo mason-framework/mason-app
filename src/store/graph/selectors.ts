@@ -1,4 +1,4 @@
-import _reduce from 'lodash/reduce'
+import _values from 'lodash/values'
 import { createSelector } from 'reselect'
 
 import {
@@ -9,7 +9,6 @@ import {
 import {
   getConnections as getBlueprintConnections,
   getNodes as getBlueprintNodes,
-  getCurrentNodeIds,
 } from 'store/blueprint/selectors'
 import { GraphState, Position, ConnectorSuggestion } from 'store/graph/types'
 import { ReduxState } from 'store/types'
@@ -75,14 +74,7 @@ export const getIsConnecting = createSelector(
 
 export const getNodes = createSelector(
   getBlueprintNodes,
-  getCurrentNodeIds,
-  (nodes, uids) => _reduce(uids, (acc: Array<Node>, uid: string): Array<Node> => {
-    const node = nodes[uid]
-    if (node) {
-      acc.push(node)
-    }
-    return acc
-  }, []),
+  (nodes): Array<Node> => _values(nodes)
 )
 
 export const getConnections = createSelector(

@@ -6,6 +6,8 @@ import undoable from 'redux-undo'
 import { appReducer } from 'store/app/reducers'
 import { blueprintReducer } from 'store/blueprint/reducers'
 import { blueprintSaga } from 'store/blueprint/sagas'
+import { storageReducer } from 'store/storage/reducers'
+import { storageSaga } from 'store/storage/sagas'
 import { graphReducer } from 'store/graph/reducers'
 import { graphSaga } from 'store/graph/sagas'
 import { libraryReducer } from 'store/library/reducers'
@@ -22,6 +24,7 @@ import { selectionSaga } from 'store/selection/sagas'
 const reducers = combineReducers({
   app: appReducer,
   blueprint: undoable(blueprintReducer),
+  storage: storageReducer,
   graph: graphReducer,
   library: libraryReducer,
   logs: logsReducer,
@@ -38,6 +41,7 @@ const store = createStore(
 
 sagaMiddleware.run(librarySaga)
 sagaMiddleware.run(logsSaga)
+sagaMiddleware.run(storageSaga)
 sagaMiddleware.run(profileSaga)
 sagaMiddleware.run(runsSaga)
 sagaMiddleware.run(blueprintSaga)

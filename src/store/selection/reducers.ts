@@ -1,4 +1,5 @@
 import {
+  BLUEPRINT_LOADED,
   NODE_ADDED,
   BlueprintAction,
 } from 'store/blueprint/types'
@@ -12,19 +13,24 @@ import {
   SelectionState,
 } from 'store/selection/types'
 
-const initialState: SelectionState = {
+const createState = (): SelectionState => ({
   selection: [],
   copy: {
     selection: [],
     mode: '',
   },
-}
+})
+
+const initialState: SelectionState = createState()
 
 export function selectionReducer(
   state = initialState,
   action: SelectionAction | BlueprintAction,
 ): SelectionState {
   switch (action.type) {
+    case BLUEPRINT_LOADED: {
+      return createState()
+    }
     case NODE_ADDED: {
       const { node } = action
       return { ...state, selection: [node.uid] }

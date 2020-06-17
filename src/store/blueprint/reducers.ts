@@ -1,5 +1,5 @@
 import {
-  BLUEPRINT_ADDED,
+  BLUEPRINT_LOADED,
   CONNECTION_ADDED,
   CONNECTION_DELETED,
   INITIALIZED,
@@ -39,21 +39,13 @@ export function blueprintReducer(
   action: BlueprintAction,
 ): BlueprintState {
   switch (action.type) {
-    case BLUEPRINT_ADDED: {
-      const { blueprint, current } = action
-      const currentBlueprintId = current ? blueprint.uid : state.currentBlueprintId
-      const currentNodeIds = current ? [] : state.currentNodeIds
-      return {
-        ...state,
-        blueprints: { ...state.blueprints, [blueprint.uid]: blueprint },
-        currentBlueprintId,
-        currentNodeIds,
-      }
+    case BLUEPRINT_LOADED: {
+      const { state: actionState } = action
+      return { ...state, ...actionState }
     }
     case CONNECTION_ADDED: {
       const { connection } = action
-      const { currentBlueprintId: blueprintId } = state
-      const connections = [...state.connections, { ...connection, blueprintId }]
+      const connections = [...state.connections, connection]
       return { ...state, connections }
     }
     case CONNECTION_DELETED: {
@@ -99,16 +91,11 @@ export function blueprintReducer(
     }
     case NODE_ADDED: {
       const { node } = action
-      const { currentBlueprintId } = state
       return {
         ...state,
-        currentNodeIds: [...state.currentNodeIds, node.uid],
         nodes: {
           ...state.nodes,
-          [node.uid]: {
-            ...node,
-            blueprintId: currentBlueprintId,
-          },
+          [node.uid]: node,
         },
       }
     }
@@ -140,7 +127,6 @@ export function blueprintReducer(
           conn.sourceNodeId !== uid
           && conn.targetNodeId !== uid
         )),
-        currentNodeIds: state.currentNodeIds.filter((nodeId) => nodeId !== uid),
         nodes,
       }
     }

@@ -8,8 +8,9 @@ import {
 } from 'redux-saga/effects'
 
 import * as api from 'store/runs/api'
+import { createServerBlueprint } from 'store/blueprint/io'
 import { openWorkflow } from 'store/app/actions'
-import { getPresent } from 'store/blueprint/selectors'
+import { getNodes, getConnections } from 'store/blueprint/selectors'
 import { getLevel as getLogLevel } from 'store/logs/selectors'
 import {
   RUN_STARTED,
@@ -20,9 +21,10 @@ import {
 function* startRunSaga({ uid, inputs }: StartRunAction) {
   yield put(openWorkflow())
   const level = yield select(getLogLevel)
-  const state = yield select(getPresent)
-  const bp = yield call(api.createBlueprint, state)
-  if (bp) {
+  const nodes = yield select(getNodes)
+  if (nodes) {
+    const connections = yield select(getConnections)
+    const bp = yield call(createServerBlueprint, nodes, connections)
     const action = yield call(api.runBlueprint, bp, uid, inputs, level)
     yield put(action)
   }

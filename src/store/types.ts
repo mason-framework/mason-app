@@ -1,5 +1,6 @@
 import { AppState } from 'store/app/types'
 import { BlueprintState } from 'store/blueprint/types'
+import { StorageState } from 'store/storage/types'
 import { GraphState } from 'store/graph/types'
 import { LibraryState } from 'store/library/types'
 import { LogsState } from 'store/logs/types'
@@ -14,6 +15,7 @@ export interface ReduxState {
   library: LibraryState
   logs: LogsState
   profile: ProfileState
-  selection: SelectionState
   runs: RunState
+  selection: SelectionState
+  storage: StorageState
 }

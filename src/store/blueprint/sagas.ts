@@ -21,16 +21,21 @@ import {
 import { getNodeMap } from 'store/library/selectors'
 
 
-function* initializeBlueprintSaga() {
+function* initializeBlueprintSaga(): SagaIterator<void> {
   const blueprint = yield call(createBlueprint)
   const schemas = yield select(getNodeMap)
-  const props = { label: 'On Run', x: 25, y: 250 }
+  const props = {
+    uid: 'on-run',
+    label: 'On Run',
+    x: 25,
+    y: 250,
+  }
   const node = yield call(createNode, schemas['blueprint.On'], props)
   yield put(addBlueprint(blueprint, true))
   yield put(addNode(node))
 }
 
-function* initializeSaga() {
+function* initializeSaga(): SagaIterator<void> {
   yield put(initialize())
 }
 

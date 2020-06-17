@@ -41,7 +41,6 @@ function makeConnector(
 ): Connection {
   const isSource = SOURCE_PLACEMENTS.includes(placement)
   return {
-    blueprintId: '',
     sourceNodeId: isSource ? nodeId : '',
     sourceName: isSource ? name : '',
     sourcePlacement: isSource ? placement : INVERSE_PLACEMENT[placement],
@@ -60,6 +59,7 @@ function makeConnector(
       offsetX: isSource ? 0 : offsetX,
       offsetY: isSource ? 0 : offsetY,
     },
+    type: '',
   }
 }
 

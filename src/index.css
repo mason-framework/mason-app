@@ -1,1 +1,18 @@
 @import '~antd/dist/antd.dark.css';
+
+.ant-collapse-header {
+  padding: 6px !important;
+  padding-left: 40px !important;
+}
+
+.ant-collapse-content {
+  padding: 6px !important;
+}
+
+.ant-collapse-content-box {
+  padding: 0 !important;
+}
+
+.ant-input-number {
+  width: 100%;
+}

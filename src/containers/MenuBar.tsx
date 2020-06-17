@@ -19,6 +19,10 @@ import {
   toggleConfig,
   toggleWorkflow,
 } from 'store/app/actions'
+import {
+  openStorageModal,
+  saveStorageModal,
+} from 'store/storage/actions'
 import { initialize } from 'store/blueprint/actions'
 import { startRun } from 'store/runs/actions'
 import {
@@ -32,6 +36,7 @@ const { SubMenu } = Menu
 
 
 interface Actions {
+  onOpen(): void
   onInitialize(): void
   onDeleteSelection(): void
   onExecute(): void
@@ -40,6 +45,8 @@ interface Actions {
   onPaste(): void
   onUndo(): void
   onRedo(): void
+  onSave(): void
+  onSaveAs(): void
   onToggleConfig(): void
   onToggleWorkflow(): void
 }
@@ -50,6 +57,7 @@ interface ClickEvent {
 
 const COPY_ACTION = 'COPY_ACTION'
 const CUT_ACTION = 'CUT_ACTION'
+const OPEN_FILE_ACTION = 'OPEN_FILE_ACTION'
 const DELETE_ACTION = 'DELETE_ACTION'
 const NEW_FILE_ACTION = 'NEW_FILE_ACTION'
 const PASTE_ACTION = 'PASTE_ACTION'
@@ -88,6 +96,7 @@ class MenuBar extends React.Component<Actions> {
   handleClick({ key }: ClickEvent) {
     const {
       onInitialize,
+      onOpen,
       onDeleteSelection,
       onExecute,
       onCopy,
@@ -95,12 +104,26 @@ class MenuBar extends React.Component<Actions> {
       onPaste,
       onUndo,
       onRedo,
+      onSave,
+      onSaveAs,
       onToggleConfig,
       onToggleWorkflow,
     } = this.props
     switch (key) {
       case NEW_FILE_ACTION: {
         onInitialize()
+        break
+      }
+      case OPEN_FILE_ACTION: {
+        onOpen()
+        break
+      }
+      case SAVE_FILE_ACTION: {
+        onSave()
+        break
+      }
+      case SAVE_FILE_AS_ACTION: {
+        onSaveAs()
         break
       }
       case SHOW_PREFS_ACTION: {
@@ -149,6 +172,8 @@ class MenuBar extends React.Component<Actions> {
           <Menu.Item key={NEW_FILE_ACTION}>
             <Item icon={<FileOutlined />} title="New..." />
           </Menu.Item>
+          <Menu.Item key={OPEN_FILE_ACTION}>Open...</Menu.Item>
+          <Divider style={{ margin: 0 }} />
           <Menu.Item key={SAVE_FILE_ACTION}>Save</Menu.Item>
           <Menu.Item key={SAVE_FILE_AS_ACTION}>Save as...</Menu.Item>
           <Divider style={{ margin: 0 }} />
@@ -198,12 +223,15 @@ class MenuBar extends React.Component<Actions> {
 }
 
 const actions = {
+  onOpen: openStorageModal,
   onDeleteSelection: deleteSelection,
   onExecute: startRun,
   onInitialize: initialize,
   onRedo: ActionCreators.redo,
   onCopy: copySelection,
   onCut: cutSelection,
+  onSave: saveStorageModal,
+  onSaveAs: saveStorageModal,
   onPaste: pasteSelection,
   onToggleConfig: toggleConfig,
   onToggleWorkflow: toggleWorkflow,

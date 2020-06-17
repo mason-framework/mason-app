@@ -20,6 +20,9 @@ import {
   getWorkflowVisible,
 } from 'store/app/selectors'
 import {
+  getIsModalVisible as getStorageVisible,
+} from 'store/storage/selectors'
+import {
   changeConfig,
   closeWorkflow,
   initialize,
@@ -31,8 +34,8 @@ import { startRun } from 'store/runs/actions'
 import { ReduxState } from 'store/types'
 
 import ConfigModal from 'components/ConfigModal'
+import StorageModal from 'containers/StorageModal'
 
-import BlueprintNavBar from 'containers/BlueprintNavBar'
 import MenuBar from 'containers/MenuBar'
 import GraphView from 'containers/GraphView'
 import LibraryView from 'containers/LibraryView'
@@ -48,6 +51,7 @@ interface Props {
   locale: string
   messages: Record<string, string>
   workflowVisible: boolean
+  storageVisible: boolean
 }
 
 interface Actions {
@@ -80,6 +84,7 @@ class App extends Component<Props & Actions> {
       onRedo,
       onSaveConfig,
       onUndo,
+      storageVisible,
       workflowVisible,
     } = this.props
     return (
@@ -108,7 +113,6 @@ class App extends Component<Props & Actions> {
                   <LibraryView />
                 </Sider>
                 <Content>
-                  <BlueprintNavBar />
                   <GraphView />
                 </Content>
                 <Sider collapsible collapsedWidth={0} reverseArrow width={350}>
@@ -127,13 +131,16 @@ class App extends Component<Props & Actions> {
                 </Footer>
               )}
             </Layout>
-            <ConfigModal
-              title="Preferences"
-              config={config}
-              onClose={onCloseConfig}
-              onSave={onSaveConfig}
-              visible={configVisible}
-            />
+            {configVisible && (
+              <ConfigModal
+                title="Preferences"
+                config={config}
+                onClose={onCloseConfig}
+                onSave={onSaveConfig}
+                visible
+              />
+            )}
+            {storageVisible && <StorageModal />}
           </HotKeys>
         </DndProvider>
       </IntlProvider>
@@ -147,6 +154,7 @@ const selector = createStructuredSelector<ReduxState, Props>({
   locale: getLocale,
   messages: getMessages,
   workflowVisible: getWorkflowVisible,
+  storageVisible: getStorageVisible,
 })
 
 const actions: Actions = {

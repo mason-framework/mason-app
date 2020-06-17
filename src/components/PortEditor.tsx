@@ -1,11 +1,11 @@
 import React from 'react'
 import {
-  Form,
   Input,
   InputNumber,
   Select,
   Switch,
 } from 'antd'
+import { EyeInvisibleFilled } from '@ant-design/icons'
 
 import { Port } from 'store/blueprint/types'
 
@@ -65,39 +65,41 @@ const EDITORS: Record<string, (props: Props & Actions) => React.ReactElement> = 
   'typing.Any': StringEditor,
 }
 
-const PortFormItem = ({ connectionHint, onChange, port }: FormProps & Actions) => {
+const PortEditor = ({ connectionHint, onChange, port }: FormProps & Actions) => {
   const editorType = EDITORS[port.type]
+  let editor
   if (connectionHint) {
-    return (
-      <Form.Item
-        label={port.label}
-        name={port.name}
-        style={{ marginBottom: 2 }}
-      >
-        <Input disabled placeholder={connectionHint} />
-      </Form.Item>
-    )
-  }
-  if (editorType) {
-    return (
-      <Form.Item
-        label={port.label}
-        name={port.name}
-        style={{ marginBottom: 2 }}
-      >
-        {React.createElement(editorType, { onChange, port })}
-      </Form.Item>
-    )
+    editor = <Input disabled placeholder={connectionHint} />
+  } else if (editorType) {
+    editor = React.createElement(editorType, { onChange, port })
+  } else {
+    editor = port.type
   }
   return (
-    <Form.Item
-      label={port.label}
-      name={port.name}
-      style={{ marginBottom: 2 }}
-    >
-      {port.type}
-    </Form.Item>
+    <div style={{ display: 'table-row' }}>
+      <div style={{ display: 'table-cell' }}>
+        <EyeInvisibleFilled style={{ color: '#303030' }} />
+      </div>
+      <div style={{ display: 'table-cell' }}>
+        <div
+          style={{
+            width: 10,
+            height: 10,
+            borderRadius: '50%',
+            background: '#303030',
+            marginRight: 2,
+          }}
+          title={port.type}
+        />
+      </div>
+      <div style={{ display: 'table-cell' }}>
+        {`${port.label}:`}
+      </div>
+      <div style={{ display: 'table-cell' }}>
+        {editor}
+      </div>
+    </div>
   )
 }
 
-export default PortFormItem
+export default PortEditor

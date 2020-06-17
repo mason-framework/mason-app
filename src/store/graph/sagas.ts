@@ -1,5 +1,7 @@
+import _kebabCase from 'lodash/kebabCase'
 import _reduce from 'lodash/reduce'
 import _values from 'lodash/values'
+
 import { SagaIterator } from 'redux-saga'
 import {
   all,
@@ -28,7 +30,6 @@ import {
 } from 'store/blueprint/types'
 import {
   getNodes,
-  getCurrentBlueprintId,
 } from 'store/blueprint/selectors'
 import { getNodes as getNodeSchemas } from 'store/library/selectors'
 import {
@@ -50,6 +51,18 @@ import {
 
 
 const HOTSPOT_AREA = 6
+
+
+function generateNodeId(nodes: Record<string, Node>, schemaName: string): string {
+  const base = _kebabCase(schemaName)
+  let uid = base
+  let index = 2
+  while (nodes[uid]) {
+    uid = `${base}-${index.toString().padStart(2, '0')}`
+    index += 1
+  }
+  return uid
+}
 
 
 function getHotspot(nodes: Record<string, Node>, x: number, y: number): Hotspot | undefined {
@@ -130,6 +143,7 @@ function makeConnectionFromHotspot(
       offsetY: isSource ? hotspot.offsetY : connector.targetPos.offsetY,
     },
     targetPlacement: isSource ? hotspot.placement : connector.targetPlacement,
+    type: hotspot.connectionType,
   })
 }
 
@@ -149,7 +163,9 @@ function makeConnection(
 
 function* createNodeSaga(action: DropNodeSchemaAction): SagaIterator<void> {
   const { schema, x, y } = action
-  const node = yield call(createNode, schema, { x, y })
+  const existing = yield select(getNodes)
+  const uid = yield call(generateNodeId, existing, schema.name)
+  const node = yield call(createNode, schema, { uid, x, y })
   yield put(addNode(node))
 }
 
@@ -158,12 +174,11 @@ function* finishNodeMoveSaga(action: FinishNodeMoveAction): SagaIterator<void> {
   const { uid } = action
   const deltas = yield select(getNodeDeltas)
   const nodes = yield select(getNodes)
-  const blueprintId = yield select(getCurrentBlueprintId)
   const node = nodes[uid]
   if (node) {
     const { dx, dy } = deltas[uid] || { dx: 0, dy: 0 }
     if (dx || dy) {
-      yield put(changeNode(uid, { x: node.x + dx, y: node.y + dy, blueprintId }))
+      yield put(changeNode(uid, { x: node.x + dx, y: node.y + dy }))
     }
   }
   yield put(clearNodeDelta(uid))
@@ -175,7 +190,9 @@ function* pickSuggestionSaga(action: PickSuggestionAction): SagaIterator<void> {
   const connector = yield select(getConnector)
   if (connector) {
     const { x, y } = connector.sourceNodeId ? connector.targetPos : connector.sourcePos
-    const node = yield call(createNode, suggestion.schema, { x, y })
+    const nodes = yield select(getNodes)
+    const uid = yield call(generateNodeId, nodes, suggestion.schema.name)
+    const node = yield call(createNode, suggestion.schema, { uid, x, y })
     yield put(addNode(node))
     for (const hotspot of node.hotspots) {
       if (hotspot.name === suggestion.name) {

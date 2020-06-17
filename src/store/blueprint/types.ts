@@ -6,11 +6,10 @@ import { NodeSchema, PortSchema } from 'store/library/types'
 
 // Action Types
 export const BLUEPRINT_ADDED = '@@blueprint/BLUEPRINT_ADDED'
+export const BLUEPRINT_LOADED = '@@blueprint/BLUEPRINT_LOADED'
 
 export const CONNECTION_ADDED = '@@blueprint/CONNECTION_ADDED'
 export const CONNECTION_DELETED = '@@blueprint/CONNECTION_DELETED'
-
-export const BLUEPRINT_EXECUTED = '@@blueprint/EXECUTED'
 
 export const INITIALIZED = '@@blueprint/INITIALIZED'
 
@@ -42,10 +41,10 @@ export interface Hotspot {
   offsetY: number
   placement: string
   title: string
+  connectionType: string
 }
 
 export interface Connection {
-  blueprintId: string
   sourceNodeId: string
   sourceName: string
   sourcePlacement: string
@@ -54,10 +53,18 @@ export interface Connection {
   targetName: string
   targetPlacement: string
   targetPos: Position
+  type: string
 }
 
+
+export interface TreeItem {
+  key: string
+  title: string | React.ReactNode
+  children: Array<TreeItem>
+}
+
+
 export const createConnection = (options: any = {}): Connection => ({
-  blueprintId: '',
   sourceNodeId: '',
   sourceName: '',
   sourcePlacement: 'right',
@@ -76,6 +83,7 @@ export const createConnection = (options: any = {}): Connection => ({
     offsetX: 0,
     offsetY: 0,
   },
+  type: 'data',
   ...options,
 })
 
@@ -96,7 +104,6 @@ export interface Node {
   hotspots: Array<Hotspot>
   label: string
   nodes: Array<Node>
-  blueprintId: string
   parentId: string
   ports: Record<string, Port>
   schema: NodeSchema
@@ -111,7 +118,7 @@ export interface Node {
 const titlize = (text: string): string => _startCase(_camelCase(text))
 
 export const createNode = (schema: NodeSchema, options: any = {}): Node => {
-  const uid = uuid4()
+  const uid = options.uid || uuid4()
   const hotspots: Array<Hotspot> = []
   const count: Record<string, number> = {
     bottom: 0,
@@ -135,6 +142,7 @@ export const createNode = (schema: NodeSchema, options: any = {}): Node => {
       offsetY: 20 + (18 * i),
       fill: 'red',
       placement: 'left',
+      connectionType: 'slot',
     }
     hotspots.push(hotspot)
     count[hotspot.placement] += 1
@@ -150,6 +158,7 @@ export const createNode = (schema: NodeSchema, options: any = {}): Node => {
       offsetY: 20 + (18 * i),
       fill: 'red',
       placement: 'right',
+      connectionType: 'signal',
     }
     hotspots.push(hotspot)
     count[hotspot.placement] += 1
@@ -197,6 +206,7 @@ export const createNode = (schema: NodeSchema, options: any = {}): Node => {
       title: titlize(port.name),
       fill: '#1a1a1a',
       placement: port.placement,
+      connectionType: 'data',
     }
     hotspots.push(hotspot)
     count[hotspot.placement] += 1
@@ -211,7 +221,6 @@ export const createNode = (schema: NodeSchema, options: any = {}): Node => {
     slots,
     uid,
     parentId: '',
-    blueprintId: '',
     width,
     height,
     x: 0,
@@ -279,8 +288,21 @@ interface DeleteNodeAction {
   uid: string
 }
 
-interface ExecuteBlueprintAction {
-  type: typeof BLUEPRINT_EXECUTED
+// State
+export interface BlueprintState {
+  connections: Array<Connection>
+  nodes: Record<string, Node>
+}
+
+export const createBlueprintState = (options: any = {}): BlueprintState => ({
+  connections: [],
+  nodes: {},
+  ...options,
+})
+
+interface LoadBlueprintAction {
+  type: typeof BLUEPRINT_LOADED
+  state: BlueprintState
 }
 
 interface InitializeAction {
@@ -295,23 +317,5 @@ export type BlueprintAction =
   ChangePortAction |
   DeleteConnectionAction |
   DeleteNodeAction |
-  ExecuteBlueprintAction |
+  LoadBlueprintAction |
   InitializeAction
-
-// State
-export interface BlueprintState {
-  blueprints: Record<string, Blueprint>
-  connections: Array<Connection>
-  currentBlueprintId: string
-  currentNodeIds: Array<string>
-  nodes: Record<string, Node>
-}
-
-export const createBlueprintState = (options: any = {}): BlueprintState => ({
-  blueprints: {},
-  connections: [],
-  currentBlueprintId: '',
-  currentNodeIds: [],
-  nodes: {},
-  ...options,
-})
