@@ -26,9 +26,9 @@ function* initializeBlueprintSaga(): SagaIterator<void> {
   const schemas = yield select(getNodeMap)
   const props = {
     uid: 'on-run',
-    label: 'On Run',
-    x: 25,
-    y: 250,
+    label: 'Start',
+    x: 5025,
+    y: 5250,
   }
   const node = yield call(createNode, schemas['blueprint.On'], props)
   yield put(addBlueprint(blueprint, true))

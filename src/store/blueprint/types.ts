@@ -4,6 +4,8 @@ import _camelCase from 'lodash/camelCase'
 import { v4 as uuid4 } from 'uuid'
 import { NodeSchema, PortSchema } from 'store/library/types'
 
+const MIN_HEIGHT: number = 40
+
 // Action Types
 export const BLUEPRINT_ADDED = '@@blueprint/BLUEPRINT_ADDED'
 export const BLUEPRINT_LOADED = '@@blueprint/BLUEPRINT_LOADED'
@@ -18,6 +20,13 @@ export const NODE_DELETED = '@@blueprint/NODE_DELETED'
 export const NODE_CHANGED = '@@blueprint/NODE_CHANGED'
 
 export const PORT_CHANGED = '@@blueprint/PORT_CHANGED'
+
+const COLOR_FLOW = '#e0e0e0'
+const COLOR_PORT_TYPES: Record<string, string> = {
+  int: 'yellow',
+  float: 'yellow',
+}
+const COLOR_DEFAULT_PORT_TYPE = '#afa0e0'
 
 
 // Interfaces
@@ -36,23 +45,26 @@ export interface Position {
 export interface Hotspot {
   nodeId: string
   name: string
-  fill: string
+  color: string
   offsetX: number
   offsetY: number
   placement: string
   title: string
   connectionType: string
+  textVisible: boolean
 }
 
 export interface Connection {
   sourceNodeId: string
   sourceName: string
+  sourceColor: string
   sourcePlacement: string
   sourcePos: Position
   targetNodeId: string
   targetName: string
   targetPlacement: string
   targetPos: Position
+  targetColor: string
   type: string
 }
 
@@ -68,6 +80,7 @@ export const createConnection = (options: any = {}): Connection => ({
   sourceNodeId: '',
   sourceName: '',
   sourcePlacement: 'right',
+  sourceColor: 'white',
   sourcePos: {
     x: 0,
     y: 0,
@@ -77,6 +90,7 @@ export const createConnection = (options: any = {}): Connection => ({
   targetNodeId: '',
   targetName: '',
   targetPlacement: 'left',
+  targetColor: 'white',
   targetPos: {
     x: 0,
     y: 0,
@@ -120,17 +134,66 @@ const titlize = (text: string): string => _startCase(_camelCase(text))
 export const createNode = (schema: NodeSchema, options: any = {}): Node => {
   const uid = options.uid || uuid4()
   const hotspots: Array<Hotspot> = []
+  const total: Record<string, number> = {
+    bottom: 0,
+    left: 0,
+    right: 0,
+    top: 0,
+  }
   const count: Record<string, number> = {
     bottom: 0,
     left: 0,
     right: 0,
     top: 0,
   }
+  const pad: Record<string, number> = {
+    top: 0,
+    topLeft: 0,
+    topRight: 0,
+    left: 15,
+    bottom: 0,
+    right: 15,
+  }
 
   const slots: Array<string> = schema.slots ? [...schema.slots] : []
   const signals: Array<string> = schema.signals ? [...schema.signals] : []
   const ports: Record<string, Port> = {}
-  const width = 150
+  const spacing = 20
+
+  total.left = slots.length
+  total.right = signals.length
+  for (const portSchema of schema.ports) {
+    if (portSchema.visibility === 'visible' || portSchema.visibility === 'connectable') {
+      const placement = portSchema.direction === 'input' ? 'left' : 'right'
+      total[placement] += 1
+    }
+  }
+
+  let width
+  switch (schema.shape) {
+    case 'round': {
+      width = 120
+      pad.top = 10
+      pad.bottom = 10
+      pad.left = 20
+      pad.right = 20
+      break
+    }
+    default: {
+      width = 150
+      pad.top = 40
+      break
+    }
+  }
+
+  const leftHeight = pad.top + (total.left * spacing) + pad.bottom
+  const rightHeight = pad.top + (total.right * spacing) + pad.bottom
+  const height = Math.max(MIN_HEIGHT, leftHeight, rightHeight)
+
+  if (schema.shape === 'round') {
+    pad.topLeft = ((height - leftHeight) / 2) + (spacing / 2)
+    pad.topRight = ((height - rightHeight) / 2) + (spacing / 2)
+  }
 
   for (let i = 0; i < slots.length; i += 1) {
     const slot = slots[i]
@@ -138,14 +201,15 @@ export const createNode = (schema: NodeSchema, options: any = {}): Node => {
       nodeId: uid,
       name: slot,
       title: titlize(slot),
-      offsetX: 1,
-      offsetY: 20 + (18 * i),
-      fill: 'red',
+      offsetX: pad.left,
+      offsetY: pad.top + pad.topLeft + (spacing * i),
+      color: COLOR_FLOW,
       placement: 'left',
       connectionType: 'slot',
+      textVisible: slots.length > 1,
     }
     hotspots.push(hotspot)
-    count[hotspot.placement] += 1
+    count.left += 1
   }
 
   for (let i = 0; i < signals.length; i += 1) {
@@ -154,17 +218,16 @@ export const createNode = (schema: NodeSchema, options: any = {}): Node => {
       nodeId: uid,
       name: signal,
       title: titlize(signal),
-      offsetX: 149,
-      offsetY: 20 + (18 * i),
-      fill: 'red',
+      offsetX: width - pad.right,
+      offsetY: pad.top + pad.topRight + (spacing * i),
+      color: COLOR_FLOW,
       placement: 'right',
       connectionType: 'signal',
+      textVisible: signals.length > 1,
     }
     hotspots.push(hotspot)
-    count[hotspot.placement] += 1
+    count.right += 1
   }
-
-  let height = Math.max(50, 25 + (count.left * 18), 25 + (count.right * 18))
 
   for (const portSchema of schema.ports || []) {
     const port: Port = {
@@ -176,43 +239,38 @@ export const createNode = (schema: NodeSchema, options: any = {}): Node => {
       schema: portSchema,
       type: portSchema.type,
       value: undefined,
-      visibility: 'visible',
+      visibility: portSchema.visibility,
     }
 
     ports[port.name] = port
 
-    const placementOffset = 20 + (18 * count[port.placement])
-    const offset = { offsetX: 0, offsetY: 0 }
-    if (port.placement === 'right') {
-      offset.offsetX = width - 1
-      offset.offsetY = placementOffset
-    } else if (port.placement === 'left') {
-      offset.offsetX = 1
-      offset.offsetY = placementOffset
-    } else if (port.placement === 'top') {
-      offset.offsetX = placementOffset
-      offset.offsetY = 1
-    } else if (port.placement === 'bottom') {
-      offset.offsetX = placementOffset
-      offset.offsetY = height - 1
-    }
+    if (portSchema.visibility === 'visible' || portSchema.visibility === 'connectable') {
+      const placementOffset = (spacing * count[port.placement])
+      const offset = { offsetX: 0, offsetY: 0 }
+      if (port.placement === 'right') {
+        offset.offsetX = width - pad.right
+        offset.offsetY = pad.top + pad.topRight + placementOffset
+      } else if (port.placement === 'left') {
+        offset.offsetX = pad.left
+        offset.offsetY = pad.top + pad.topLeft + placementOffset
+      }
 
-    height = Math.max(50, 25 + (count.left * 18), 25 + (count.right * 18))
-
-    const hotspot: Hotspot = {
-      ...offset,
-      nodeId: uid,
-      name: port.name,
-      title: titlize(port.name),
-      fill: '#1a1a1a',
-      placement: port.placement,
-      connectionType: 'data',
+      const hotspot: Hotspot = {
+        ...offset,
+        nodeId: uid,
+        name: port.name,
+        title: titlize(port.name),
+        color: COLOR_PORT_TYPES[portSchema.type] || COLOR_DEFAULT_PORT_TYPE,
+        placement: port.placement,
+        connectionType: 'data',
+        textVisible: total[port.placement] > 1,
+      }
+      hotspots.push(hotspot)
+      count[port.placement] += 1
     }
-    hotspots.push(hotspot)
-    count[hotspot.placement] += 1
   }
 
-  const label = titlize(schema.name)
+  const label = schema.defaultLabel || titlize(schema.name)
   return {
     label,
     ports,

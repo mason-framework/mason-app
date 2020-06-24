@@ -1,6 +1,7 @@
 import React from 'react'
 import { useDrop } from 'react-dnd'
 import { localPoint } from '@vx/event'
+import { LinearGradient } from '@vx/gradient'
 import { Zoom } from '@vx/zoom'
 
 import { COLOR_BG } from 'store/graph/colors'
@@ -14,13 +15,9 @@ import {
   NodeSchema,
 } from 'store/library/types'
 
-interface Point {
-  x: number
-  y: number
-}
-
 interface Props {
   activeNodeIds: Array<string>
+  connectedHotpotIds: Record<string, boolean>
   connections: Array<Connection>
   isConnecting: boolean
   nodes: Array<Node>
@@ -28,6 +25,7 @@ interface Props {
 }
 
 interface LayoutProps {
+  isDragging: boolean
   scaleX: number
   scaleY: number
 }
@@ -35,6 +33,7 @@ interface LayoutProps {
 interface Dimensions {
   height: number
   width: number
+  size: number
 }
 
 interface Actions {
@@ -55,6 +54,8 @@ interface ViewActions {
 const GraphLayout = ({
   activeNodeIds,
   connections,
+  connectedHotpotIds,
+  isDragging,
   isConnecting,
   nodes,
   onConnectionEnd,
@@ -78,6 +79,8 @@ const GraphLayout = ({
           onSelect={onSelect}
           sourcePos={conn.sourcePos}
           targetPos={conn.targetPos}
+          sourceColor={conn.sourceColor}
+          targetColor={conn.targetColor}
           sourcePlacement={conn.sourcePlacement}
           targetPlacement={conn.targetPlacement}
           selected={selection.includes(uid)}
@@ -87,8 +90,9 @@ const GraphLayout = ({
     {nodes.map((node) => (
       <GraphNodeItem
         height={node.height}
+        connectedHotpotIds={connectedHotpotIds}
         hotspots={node.hotspots}
-        isConnecting={isConnecting}
+        disablePointer={isConnecting || isDragging}
         key={node.uid}
         onConnectionEnd={onConnectionEnd}
         onConnectionMove={onConnectionMove}
@@ -98,6 +102,7 @@ const GraphLayout = ({
         onDragEnd={onNodeDragEnd}
         selected={selection.includes(node.uid) || activeNodeIds.includes(node.uid)}
         label={node.label}
+        shape={node.schema.shape}
         uid={node.uid}
         width={node.width}
         x={node.x}
@@ -111,6 +116,7 @@ const GraphLayout = ({
 
 const GraphInner = ({
   activeNodeIds,
+  connectedHotpotIds,
   connections,
   height,
   nodes,
@@ -125,6 +131,7 @@ const GraphInner = ({
   onNodeDragEnd,
   onSelect,
   selection,
+  size,
   width,
   zoom,
 }: Dimensions & Props & Actions & ViewActions & { zoom: any }) => {
@@ -155,7 +162,12 @@ const GraphInner = ({
       }}
       ref={dropInfo[1]}
     >
-      <svg width={width} height={height} style={{ cursor: zoom.isDragging ? 'grabbing' : '' }}>
+      <svg
+        width={size}
+        height={size}
+        style={{ cursor: zoom.isDragging ? 'grabbing' : '' }}
+      >
+        <LinearGradient id="node-bg" from="#1a1a1a" to="#0f0f0f" />
         <rect
           width={width}
           height={height}
@@ -180,8 +192,10 @@ const GraphInner = ({
         <g transform={zoom.toString()}>
           <GraphLayout
             activeNodeIds={activeNodeIds}
+            connectedHotpotIds={connectedHotpotIds}
             connections={connections}
             isConnecting={isConnecting}
+            isDragging={zoom.isDragging}
             nodes={nodes}
             onClearSelection={onClearSelection}
             onConnectionEnd={onConnectionEnd}
@@ -201,16 +215,29 @@ const GraphInner = ({
   )
 }
 
-const Graph = (props: Dimensions & Props & Actions & ViewActions) => (
+const Graph = ({
+  height,
+  width,
+  size,
+  ...props
+}: Dimensions & Props & Actions & ViewActions) => (
   <Zoom
-    height={props.height}
+    height={height}
     scaleXMax={4}
     scaleXMin={0.1}
     scaleYMax={4}
     scaleYMin={0.1}
-    width={props.width}
+    width={width}
+    transformMatrix={{
+      scaleX: 1,
+      scaleY: 1,
+      skewX: 0,
+      skewY: 0,
+      translateX: -size / 2,
+      translateY: -size / 2,
+    }}
   >
-    {(zoom) => <GraphInner zoom={zoom} {...props } />}
+    {(zoom) => <GraphInner zoom={zoom} height={height} width={width} size={size} {...props} />}
   </Zoom>
 )
 

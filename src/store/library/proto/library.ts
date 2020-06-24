@@ -10,11 +10,14 @@ export interface PortSchema {
   map: boolean;
   choices: string[];
   default: string;
+  visibility: string;
 }
 
 export interface NodeSchema {
   group: string;
   name: string;
+  shape: string;
+  defaultLabel: string;
   ports: PortSchema[];
   signals: string[];
   slots: string[];
@@ -40,11 +43,14 @@ const basePortSchema: object = {
   map: false,
   choices: "",
   default: "",
+  visibility: "",
 };
 
 const baseNodeSchema: object = {
   group: "",
   name: "",
+  shape: "",
+  defaultLabel: "",
   ports: undefined,
   signals: "",
   slots: "",
@@ -73,6 +79,7 @@ export const PortSchema = {
       writer.uint32(50).string(v!);
     }
     writer.uint32(58).string(message.default);
+    writer.uint32(66).string(message.visibility);
     return writer;
   },
   decode(reader: Reader, length?: number): PortSchema {
@@ -102,6 +109,9 @@ export const PortSchema = {
           break;
         case 7:
           message.default = reader.string();
+          break;
+        case 8:
+          message.visibility = reader.string();
           break;
         default:
           reader.skipType(tag & 7);
@@ -148,6 +158,11 @@ export const PortSchema = {
     } else {
       message.default = "";
     }
+    if (object.visibility !== undefined && object.visibility !== null) {
+      message.visibility = String(object.visibility);
+    } else {
+      message.visibility = "";
+    }
     return message;
   },
   fromPartial(object: DeepPartial<PortSchema>): PortSchema {
@@ -188,6 +203,11 @@ export const PortSchema = {
     } else {
       message.default = "";
     }
+    if (object.visibility !== undefined && object.visibility !== null) {
+      message.visibility = object.visibility;
+    } else {
+      message.visibility = "";
+    }
     return message;
   },
   toJSON(message: PortSchema): unknown {
@@ -203,6 +223,7 @@ export const PortSchema = {
       obj.choices = [];
     }
     obj.default = message.default || "";
+    obj.visibility = message.visibility || "";
     return obj;
   },
 };
@@ -211,14 +232,16 @@ export const NodeSchema = {
   encode(message: NodeSchema, writer: Writer = Writer.create()): Writer {
     writer.uint32(10).string(message.group);
     writer.uint32(18).string(message.name);
+    writer.uint32(26).string(message.shape);
+    writer.uint32(34).string(message.defaultLabel);
     for (const v of message.ports) {
-      PortSchema.encode(v!, writer.uint32(26).fork()).ldelim();
+      PortSchema.encode(v!, writer.uint32(42).fork()).ldelim();
     }
     for (const v of message.signals) {
-      writer.uint32(34).string(v!);
+      writer.uint32(50).string(v!);
     }
     for (const v of message.slots) {
-      writer.uint32(42).string(v!);
+      writer.uint32(58).string(v!);
     }
     return writer;
   },
@@ -238,12 +261,18 @@ export const NodeSchema = {
           message.name = reader.string();
           break;
         case 3:
-          message.ports.push(PortSchema.decode(reader, reader.uint32()));
+          message.shape = reader.string();
           break;
         case 4:
-          message.signals.push(reader.string());
+          message.defaultLabel = reader.string();
           break;
         case 5:
+          message.ports.push(PortSchema.decode(reader, reader.uint32()));
+          break;
+        case 6:
+          message.signals.push(reader.string());
+          break;
+        case 7:
           message.slots.push(reader.string());
           break;
         default:
@@ -267,6 +296,16 @@ export const NodeSchema = {
       message.name = String(object.name);
     } else {
       message.name = "";
+    }
+    if (object.shape !== undefined && object.shape !== null) {
+      message.shape = String(object.shape);
+    } else {
+      message.shape = "";
+    }
+    if (object.defaultLabel !== undefined && object.defaultLabel !== null) {
+      message.defaultLabel = String(object.defaultLabel);
+    } else {
+      message.defaultLabel = "";
     }
     if (object.ports !== undefined && object.ports !== null) {
       for (const e of object.ports) {
@@ -300,6 +339,16 @@ export const NodeSchema = {
     } else {
       message.name = "";
     }
+    if (object.shape !== undefined && object.shape !== null) {
+      message.shape = object.shape;
+    } else {
+      message.shape = "";
+    }
+    if (object.defaultLabel !== undefined && object.defaultLabel !== null) {
+      message.defaultLabel = object.defaultLabel;
+    } else {
+      message.defaultLabel = "";
+    }
     if (object.ports !== undefined && object.ports !== null) {
       for (const e of object.ports) {
         message.ports.push(PortSchema.fromPartial(e));
@@ -321,6 +370,8 @@ export const NodeSchema = {
     const obj: any = {};
     obj.group = message.group || "";
     obj.name = message.name || "";
+    obj.shape = message.shape || "";
+    obj.defaultLabel = message.defaultLabel || "";
     if (message.ports) {
       obj.ports = message.ports.map(e => e ? PortSchema.toJSON(e) : undefined);
     } else {

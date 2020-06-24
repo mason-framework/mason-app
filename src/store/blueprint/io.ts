@@ -23,8 +23,10 @@ export interface NodeGeometry {
 export interface ConnectionGeometry {
   sourcePlacement: string
   sourcePos: Position
+  sourceColor: string
   targetPlacement: string
   targetPos: Position
+  targetColor: string
   type: string
 }
 
@@ -168,16 +170,20 @@ export function createUi(
       const {
         sourcePos,
         sourcePlacement,
+        sourceColor,
         targetPos,
         targetPlacement,
+        targetColor,
         type,
       } = conn
       const uid = `${conn.sourceNodeId}.${conn.sourceName}--${conn.targetNodeId}.${conn.targetName}`
       acc[uid] = {
         sourcePos,
+        sourceColor,
         sourcePlacement,
         targetPos,
         targetPlacement,
+        targetColor,
         type,
       }
       return acc

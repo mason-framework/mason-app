@@ -22,6 +22,9 @@ import {
   showSuggestions,
 } from 'store/graph/actions'
 import {
+  OPERATIONS_CANCELLED,
+} from 'store/app/types'
+import {
   Connection,
   Node,
   Hotspot,
@@ -133,6 +136,7 @@ function makeConnectionFromHotspot(
       offsetX: isSource ? connector.sourcePos.offsetX : hotspot.offsetX,
       offsetY: isSource ? connector.sourcePos.offsetY : hotspot.offsetY,
     },
+    sourceColor: isSource ? connector.sourceColor : hotspot.color,
     sourcePlacement: isSource ? connector.sourcePlacement : hotspot.placement,
     targetNodeId: isSource ? hotspot.nodeId : connector.targetNodeId,
     targetName: isSource ? hotspot.name : connector.targetName,
@@ -143,6 +147,7 @@ function makeConnectionFromHotspot(
       offsetY: isSource ? hotspot.offsetY : connector.targetPos.offsetY,
     },
     targetPlacement: isSource ? hotspot.placement : connector.targetPlacement,
+    targetColor: isSource ? hotspot.color : connector.targetColor,
     type: hotspot.connectionType,
   })
 }
@@ -193,12 +198,19 @@ function* pickSuggestionSaga(action: PickSuggestionAction): SagaIterator<void> {
     const nodes = yield select(getNodes)
     const uid = yield call(generateNodeId, nodes, suggestion.schema.name)
     const node = yield call(createNode, suggestion.schema, { uid, x, y })
-    yield put(addNode(node))
     for (const hotspot of node.hotspots) {
       if (hotspot.name === suggestion.name) {
+        node.y -= hotspot.offsetY
+        if (hotspot.placement === 'right') {
+          node.x -= hotspot.offsetX
+        } else {
+          node.x += hotspot.offsetX
+        }
         const connection = yield call(makeConnectionFromHotspot, connector, hotspot)
         if (connection) {
+          yield put(addNode(node))
           yield put(addConnection(connection))
+          break
         }
       }
     }
@@ -228,8 +240,14 @@ function* maybeCreateConnectionSaga(action: StopConnectorAction): SagaIterator<v
   yield put(finishConnector())
 }
 
+function* cancelOperationsSaga(): SagaIterator<void> {
+  yield put(clearSuggestions())
+  yield put(finishConnector())
+}
+
 export function* graphSaga(): SagaIterator<void> {
   yield all([
+    takeEvery(OPERATIONS_CANCELLED, cancelOperationsSaga),
     takeEvery(CONNECTOR_STOPPED, maybeCreateConnectionSaga),
     takeEvery(NODE_SCHEMA_DROPPED, createNodeSaga),
     takeEvery(NODE_MOVE_FINISHED, finishNodeMoveSaga),

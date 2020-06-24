@@ -23,7 +23,7 @@ import { selectionSaga } from 'store/selection/sagas'
 
 const reducers = combineReducers({
   app: appReducer,
-  blueprint: undoable(blueprintReducer),
+  blueprint: undoable(blueprintReducer, { limit: 10 }),
   storage: storageReducer,
   graph: graphReducer,
   library: libraryReducer,

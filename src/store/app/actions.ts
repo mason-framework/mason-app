@@ -2,6 +2,7 @@ import {
   CONFIG_CHANGED,
   CONFIG_TOGGLED,
   INITIALIZED,
+  OPERATIONS_CANCELLED,
   WORKFLOW_CLOSED,
   WORKFLOW_OPENED,
   WORKFLOW_TOGGLED,
@@ -9,6 +10,10 @@ import {
   Config,
   AppAction,
 } from 'store/app/types'
+
+export const cancelOperations = (): AppAction => ({
+  type: OPERATIONS_CANCELLED,
+})
 
 export const initialize = (): AppAction => ({
   type: INITIALIZED,

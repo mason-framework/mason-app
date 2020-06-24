@@ -66,7 +66,7 @@ export const getConnectionHints = createSelector(
       for (const conn of connections) {
         if (conn.targetNodeId === selected.uid) {
           const sourceNode = nodes[conn.sourceNodeId]
-          const hint = `{{ self.blueprint['${sourceNode.label}.${conn.sourceName}'] }}`
+          const hint = `{{ self.blueprint['${sourceNode.uid}.${conn.sourceName}'] }}`
           if (hints[conn.targetName]) {
             hints[conn.targetName] += `, ${hint}`
           } else {

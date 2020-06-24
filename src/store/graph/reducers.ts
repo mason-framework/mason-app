@@ -35,6 +35,7 @@ function makeConnector(
     offsetX,
     offsetY,
     placement,
+    color,
   }: Hotspot,
   x: number,
   y: number,
@@ -44,6 +45,7 @@ function makeConnector(
     sourceNodeId: isSource ? nodeId : '',
     sourceName: isSource ? name : '',
     sourcePlacement: isSource ? placement : INVERSE_PLACEMENT[placement],
+    sourceColor: color,
     sourcePos: {
       x: x + (isSource ? 0 : offsetX),
       y: y + (isSource ? 0 : offsetY),
@@ -53,6 +55,7 @@ function makeConnector(
     targetNodeId: isSource ? '' : nodeId,
     targetName: isSource ? '' : name,
     targetPlacement: isSource ? INVERSE_PLACEMENT[placement] : placement,
+    targetColor: color,
     targetPos: {
       x: x + (isSource ? offsetX : 0),
       y: y + (isSource ? offsetY : 0),

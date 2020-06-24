@@ -5,7 +5,6 @@ import {
   Form,
   Input,
   Select,
-  Space,
   Switch,
 } from 'antd'
 
@@ -13,6 +12,7 @@ interface Props {
   enabled: boolean
   logs: Array<string>
   level: string
+  height: number
 }
 
 interface Actions {
@@ -22,6 +22,7 @@ interface Actions {
 }
 
 const LogPanel = ({
+  height,
   enabled,
   level,
   logs,
@@ -29,7 +30,7 @@ const LogPanel = ({
   onClear,
   onToggle,
 }: Props & Actions) => (
-  <Space direction="vertical" style={{ width: '100%' }}>
+  <div style={{ display: 'flex', flex: 1, flexDirection: 'column' }}>
     <Form layout="inline" size="small">
       <Form.Item label="Enabled">
         <Switch onChange={onToggle} checked={enabled} />
@@ -55,14 +56,17 @@ const LogPanel = ({
     <Input.TextArea
       disabled={!enabled}
       style={{
-        height: 310,
         fontFamily: 'monospace',
         background: '#0c0c0c',
         color: 'white',
+        marginTop: 8,
+        flex: 1,
+        minHeight: height,
       }}
       value={logs.join('')}
+      readOnly
     />
-  </Space>
+  </div>
 )
 
 export default LogPanel

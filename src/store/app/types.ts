@@ -6,6 +6,8 @@ export const INITIALIZED = '@@app/INITIALIZED'
 export const CONFIG_CHANGED = '@@app/CONFIG_CHANGED'
 export const CONFIG_TOGGLED = '@@app/CONFIG_TOGGLED'
 
+export const OPERATIONS_CANCELLED = '@@app/OPERATIONS_CANCELLED'
+
 export const WORKFLOW_OPENED = '@@app/WORKFLOW_OPENED'
 export const WORKFLOW_TAB_CHANGED = '@@app/WORKFLOW_TAB_CHANGED'
 export const WORKFLOW_CLOSED = '@@app/WORKFLOW_CLOSED'
@@ -36,6 +38,10 @@ export interface InitializeAction {
   type: typeof INITIALIZED
 }
 
+interface CancelOperationsAction {
+  type: typeof OPERATIONS_CANCELLED
+}
+
 interface ChangeConfigAction {
   type: typeof CONFIG_CHANGED
   config: Config
@@ -64,6 +70,7 @@ export interface ToggleWorkflowAction {
 }
 
 export type AppAction =
+  CancelOperationsAction |
   ChangeConfigAction |
   ChangeWorkflowTabAction |
   CloseWorkflowAction |

@@ -1,13 +1,11 @@
 import React from 'react'
 import { NodeTimeline } from 'store/profile/types'
-import { AutoSizer } from 'react-virtualized'
 
 import TimelineGraph from 'components/TimelineGraph'
 
 import {
   Button,
   Form,
-  Space,
   Switch,
   Typography,
 } from 'antd'
@@ -18,6 +16,8 @@ interface Props {
   enabled: boolean
   timelines: Array<NodeTimeline>
   totalTime: number
+  width: number
+  height: number
 }
 
 interface Actions {
@@ -31,8 +31,10 @@ const LogPanel = ({
   totalTime,
   onClear,
   onToggle,
+  width,
+  height,
 }: Props & Actions) => (
-  <Space direction="vertical" style={{ width: '100%' }}>
+  <div style={{ display: 'flex', flexDirection: 'column' }}>
     <Form layout="inline" size="small">
       <Form.Item label="Enabled">
         <Switch onChange={onToggle} checked={enabled} />
@@ -44,19 +46,15 @@ const LogPanel = ({
         <Button disabled={!enabled} onClick={onClear}>Clear Events</Button>
       </Form.Item>
     </Form>
-    <div style={{ height: 310 }}>
-      <AutoSizer>
-        {({ width, height }) => (
-          <TimelineGraph
-            height={height}
-            timelines={timelines}
-            totalTime={totalTime}
-            width={width}
-          />
-        )}
-      </AutoSizer>
+    <div style={{ flex: 1, marginTop: 8 }}>
+      <TimelineGraph
+        height={height}
+        timelines={timelines}
+        totalTime={totalTime}
+        width={width}
+      />
     </div>
-  </Space>
+  </div>
 )
 
 export default LogPanel

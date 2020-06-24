@@ -11,6 +11,8 @@ import { DndProvider } from 'react-dnd'
 import DndBackend from 'react-dnd-html5-backend'
 import { ActionCreators } from 'redux-undo'
 import { HotKeys } from 'react-hotkeys'
+import { AutoSizer } from 'react-virtualized'
+import SplitPane from 'react-split-pane'
 
 import {
   getConfig,
@@ -23,6 +25,7 @@ import {
   getIsModalVisible as getStorageVisible,
 } from 'store/storage/selectors'
 import {
+  cancelOperations,
   changeConfig,
   closeWorkflow,
   initialize,
@@ -55,6 +58,7 @@ interface Props {
 }
 
 interface Actions {
+  onCancelOperations(): void
   onCloseConfig(): void
   onCloseWorkflow(): void
   onExecute(): void
@@ -78,6 +82,7 @@ class App extends Component<Props & Actions> {
       configVisible,
       locale,
       messages,
+      onCancelOperations,
       onCloseConfig,
       onExecute,
       onOpenWorkflow,
@@ -87,6 +92,28 @@ class App extends Component<Props & Actions> {
       storageVisible,
       workflowVisible,
     } = this.props
+
+    const panes = [(
+      <AutoSizer>
+        {({ width, height }) => (
+          <Layout key="layout" style={{ width, height }}>
+            <Sider collapsible collapsedWidth={0} defaultCollapsed>
+              <LibraryView />
+            </Sider>
+            <Content>
+              <GraphView width={width} height={height} />
+            </Content>
+            <Sider collapsible collapsedWidth={0} defaultCollapsed reverseArrow width={350}>
+              <NodeForm />
+            </Sider>
+          </Layout>
+        )}
+      </AutoSizer>
+    )]
+    if (workflowVisible) {
+      panes.push(<WorkflowView />)
+    }
+
     return (
       <IntlProvider
         key={locale}
@@ -96,6 +123,7 @@ class App extends Component<Props & Actions> {
         <DndProvider backend={DndBackend}>
           <HotKeys
             keyMap={{
+              ESC: ['escape'],
               UNDO: ['cmd+z'],
               REDO: ['cmd+shift+z'],
               EXECUTE: ['cmd+enter'],
@@ -104,29 +132,20 @@ class App extends Component<Props & Actions> {
               UNDO: onUndo,
               REDO: onRedo,
               EXECUTE: onExecute,
+              ESC: onCancelOperations,
             }}
           >
             <Layout style={{ height: '100vh' }}>
               <MenuBar />
-              <Layout>
-                <Sider collapsible collapsedWidth={0}>
-                  <LibraryView />
-                </Sider>
-                <Content>
-                  <GraphView />
-                </Content>
-                <Sider collapsible collapsedWidth={0} reverseArrow width={350}>
-                  <NodeForm />
-                </Sider>
-              </Layout>
-              {workflowVisible ? (
-                <WorkflowView />
-              ) : (
+              <SplitPane split="horizontal">
+                {panes}
+              </SplitPane>
+              {!workflowVisible && (
                 <Footer style={{ background: '#141414', borderTop: '1px solid black', padding: 3 }}>
                   <Space>
                     <Button type="link" ghost onClick={() => onOpenWorkflow('runs')}>Runs</Button>
-                    <Button type="link" ghost onClick={() => onOpenWorkflow('logging')}>Logging</Button>
-                    <Button type="link" ghost onClick={() => onOpenWorkflow('profiling')}>Profiling</Button>
+                    <Button type="link" ghost onClick={() => onOpenWorkflow('logging')}>Logs</Button>
+                    <Button type="link" ghost onClick={() => onOpenWorkflow('profiling')}>Profile</Button>
                   </Space>
                 </Footer>
               )}
@@ -158,6 +177,7 @@ const selector = createStructuredSelector<ReduxState, Props>({
 })
 
 const actions: Actions = {
+  onCancelOperations: cancelOperations,
   onCloseConfig: toggleConfig,
   onCloseWorkflow: closeWorkflow,
   onExecute: startRun,

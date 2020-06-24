@@ -16,7 +16,7 @@ import {
 
 const initialState: ProfileState = {
   requestTime: 0,
-  enabled: false,
+  enabled: true,
   active: false,
   events: [],
 }
@@ -28,17 +28,22 @@ export function profileReducer(
   switch (action.type) {
     case EVENTS_ADDED: {
       const { events } = action
-      return {...state, events: [...state.events, ...events]}
+      return { ...state, events: [...state.events, ...events] }
     }
     case EVENTS_CLEARED: {
-      return {...state, events: []}
+      return { ...state, events: [] }
     }
     case REQUEST_TIME_CHANGED: {
       const { requestTime } = action
       return { ...state, requestTime }
     }
     case RUN_STARTED: {
-      return { ...state, events: [], active: true, requestTime: 0 }
+      return {
+        ...state,
+        events: [],
+        active: true,
+        requestTime: 0,
+      }
     }
     case RUN_FINISHED: {
       return { ...state, active: false }
@@ -48,10 +53,10 @@ export function profileReducer(
     }
     case PROFILE_ENABLED: {
       const { enabled } = action
-      return {...state, enabled}
+      return { ...state, enabled }
     }
     case PROFILE_TOGGLED: {
-      return {...state, enabled: !state.enabled }
+      return { ...state, enabled: !state.enabled }
     }
     default:
       return state

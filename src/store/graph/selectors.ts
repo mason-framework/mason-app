@@ -1,3 +1,4 @@
+import _reduce from 'lodash/reduce'
 import _values from 'lodash/values'
 import { createSelector } from 'reselect'
 
@@ -53,6 +54,35 @@ export const getSuggestionsSearch = (
   ({ graph }: ReduxState): string => graph.suggestionsSearch
 )
 
+export const getConnectedHotspotIds = createSelector(
+  getBlueprintConnections,
+  getConnector,
+  (connections, connector): Record<string, boolean> => {
+    const hotspotIds = _reduce(
+      connections,
+      (
+        acc: Record<string, boolean>,
+        connection: Connection,
+      ) => {
+        const source = `${connection.sourceNodeId}.${connection.sourceName}`
+        const target = `${connection.targetNodeId}.${connection.targetName}`
+        acc[source] = true
+        acc[target] = true
+        return acc
+      },
+      {},
+    )
+    if (connector && connector.sourceNodeId) {
+      const source = `${connector.sourceNodeId}.${connector.sourceName}`
+      hotspotIds[source] = true
+    } else if (connector && connector.targetNodeId) {
+      const target = `${connector.targetNodeId}.${connector.targetName}`
+      hotspotIds[target] = true
+    }
+    return hotspotIds
+  },
+)
+
 export const getSuggestions = createSelector(
   getGraph,
   getSuggestionsSearch,
@@ -74,7 +104,7 @@ export const getIsConnecting = createSelector(
 
 export const getNodes = createSelector(
   getBlueprintNodes,
-  (nodes): Array<Node> => _values(nodes)
+  (nodes): Array<Node> => _values(nodes),
 )
 
 export const getConnections = createSelector(

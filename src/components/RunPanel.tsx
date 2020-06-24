@@ -3,7 +3,6 @@ import React from 'react'
 import {
   Button,
   Form,
-  Space,
   Collapse,
 } from 'antd'
 
@@ -15,6 +14,7 @@ import {
 interface Props {
   currentId: string
   runs: Array<Run>
+  height: number
 }
 
 interface Actions {
@@ -27,8 +27,9 @@ const RunPanel = ({
   runs,
   onClear,
   onRun,
+  height,
 }: Props & Actions) => (
-  <Space direction="vertical" style={{ width: '100%' }}>
+  <div style={{ display: 'flex', flex: 1, flexDirection: 'column' }}>
     <Form layout="inline" size="small">
       <Form.Item>
         <Button onClick={onRun}>Run...</Button>
@@ -37,21 +38,23 @@ const RunPanel = ({
         <Button onClick={onClear}>Clear Runs</Button>
       </Form.Item>
     </Form>
-    <Collapse defaultActiveKey={currentId} style={{ height: 310 }}>
-      {runs.reverse().map((run, i) => (
-        <Collapse.Panel
-          key={run.uid}
-          header={
-            run.status === STATUS_RUNNING
-              ? `Run #${runs.length - i} (Running...)`
-              : `Run #${runs.length - i}`
-          }
-        >
-          {run.status}
-        </Collapse.Panel>
-      ))}
-    </Collapse>
-  </Space>
+    <div style={{ marginTop: 8, flex: 1 }}>
+      <Collapse defaultActiveKey={currentId} style={{ height }}>
+        {runs.reverse().map((run, i) => (
+          <Collapse.Panel
+            key={run.uid}
+            header={
+              run.status === STATUS_RUNNING
+                ? `Run #${runs.length - i} (Running...)`
+                : `Run #${runs.length - i}`
+            }
+          >
+            {run.status}
+          </Collapse.Panel>
+        ))}
+      </Collapse>
+    </div>
+  </div>
 )
 
 export default RunPanel

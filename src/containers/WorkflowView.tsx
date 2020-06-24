@@ -3,6 +3,7 @@ import { Button, Tabs } from 'antd'
 import { CloseOutlined } from '@ant-design/icons'
 import { connect } from 'react-redux'
 import { createStructuredSelector } from 'reselect'
+import { AutoSizer } from 'react-virtualized'
 
 import LogPanel from 'components/LogPanel'
 import ProfilePanel from 'components/ProfilePanel'
@@ -89,46 +90,54 @@ const WorkflowView = ({
   onRun,
   tab,
 }: Props & Actions) => (
-  <div style={{ position: 'relative' }}>
-    <Tabs
-      defaultActiveKey={tab}
-      onChange={onTabChange}
-      type="card"
-      tabBarGutter={0}
-      tabBarStyle={{ marginBottom: 0 }}
-      tabBarExtraContent={(
-        <Button onClick={onClose} type="link" ghost><CloseOutlined /></Button>
-      )}
-    >
-      <Tabs.TabPane tab="Runs" key="runs" style={TAB_PANE_STYLE}>
-        <RunPanel
-          currentId={currentRunId}
-          runs={runs}
-          onClear={onClearRuns}
-          onRun={onRun}
-        />
-      </Tabs.TabPane>
-      <Tabs.TabPane tab="Logging" key="logging" style={TAB_PANE_STYLE}>
-        <LogPanel
-          enabled={logsEnabled}
-          logs={logs}
-          onClear={onClearLogs}
-          level={logLevel}
-          onChangeLevel={onChangeLogLevel}
-          onToggle={onToggleLogs}
-        />
-      </Tabs.TabPane>
-      <Tabs.TabPane tab="Profiling" key="profiling" style={TAB_PANE_STYLE}>
-        <ProfilePanel
-          onClear={onClearEvents}
-          onToggle={onToggleProfile}
-          enabled={profileEnabled}
-          timelines={profileTimelines}
-          totalTime={Math.max(profileTotalTime, profileRequestTime)}
-        />
-      </Tabs.TabPane>
-    </Tabs>
-  </div>
+  <AutoSizer>
+    {({ width, height }) => (
+      <div style={{ position: 'relative', width, height }}>
+        <Tabs
+          defaultActiveKey={tab}
+          onChange={onTabChange}
+          type="card"
+          tabBarGutter={0}
+          tabBarStyle={{ marginBottom: 0 }}
+          tabBarExtraContent={(
+            <Button onClick={onClose} type="link" ghost><CloseOutlined /></Button>
+          )}
+        >
+          <Tabs.TabPane tab="Runs" key="runs" style={TAB_PANE_STYLE}>
+            <RunPanel
+              currentId={currentRunId}
+              runs={runs}
+              onClear={onClearRuns}
+              onRun={onRun}
+              height={height - 100}
+            />
+          </Tabs.TabPane>
+          <Tabs.TabPane tab="Logs" key="logging" style={TAB_PANE_STYLE}>
+            <LogPanel
+              enabled={logsEnabled}
+              logs={logs}
+              onClear={onClearLogs}
+              level={logLevel}
+              onChangeLevel={onChangeLogLevel}
+              onToggle={onToggleLogs}
+              height={height - 100}
+            />
+          </Tabs.TabPane>
+          <Tabs.TabPane tab="Profile" key="profiling" style={TAB_PANE_STYLE}>
+            <ProfilePanel
+              onClear={onClearEvents}
+              onToggle={onToggleProfile}
+              enabled={profileEnabled}
+              timelines={profileTimelines}
+              totalTime={Math.max(profileTotalTime, profileRequestTime)}
+              height={height - 100}
+              width={width - 20}
+            />
+          </Tabs.TabPane>
+        </Tabs>
+      </div>
+    )}
+  </AutoSizer>
 )
 
 const selector = createStructuredSelector<ReduxState, Props>({

@@ -43,6 +43,7 @@ import {
   getSuggestions,
   getSuggestionsPosition,
   getSuggestionsSearch,
+  getConnectedHotspotIds,
 } from 'store/graph/selectors'
 
 import {
@@ -52,8 +53,9 @@ import {
 import { Node, Connection, Hotspot } from 'store/blueprint/types'
 import { ReduxState } from 'store/types'
 
-interface Props {
+interface ConnectedProps {
   activeNodeIds: Array<string>
+  connectedHotpotIds: Record<string, boolean>
   connections: Array<Connection>
   isConnecting: boolean
   nodes: Array<Node>
@@ -61,6 +63,11 @@ interface Props {
   suggestions?: Array<ConnectorSuggestion>
   suggestionsPosition: Position
   suggestionsSearch: string
+}
+
+interface Props {
+  width: number
+  height: number
 }
 
 interface Actions {
@@ -85,6 +92,7 @@ interface Actions {
 const GraphView = ({
   activeNodeIds,
   connections,
+  connectedHotpotIds,
   isConnecting,
   nodes,
   onClearSelection,
@@ -107,9 +115,12 @@ const GraphView = ({
   suggestions,
   suggestionsPosition,
   suggestionsSearch,
-}: Props & Actions) => (
+  width,
+  height,
+}: Props & ConnectedProps & Actions) => (
   <>
     <HotKeys
+      style={{ flex: 1 }}
       keyMap={{
         DELETE_NODE: ['del', 'backspace'],
         COPY: ['cmd+c'],
@@ -125,8 +136,9 @@ const GraphView = ({
     >
       <Graph
         activeNodeIds={activeNodeIds}
+        connectedHotpotIds={connectedHotpotIds}
         connections={connections}
-        height={10000}
+        height={height}
         isConnecting={isConnecting}
         nodes={nodes}
         onConnectionEnd={onConnectionEnd}
@@ -139,7 +151,8 @@ const GraphView = ({
         onNodeDragEnd={onNodeDragEnd}
         onSelect={onSelect}
         selection={selection}
-        width={10000}
+        size={10000}
+        width={width}
       />
     </HotKeys>
     {(
@@ -159,8 +172,9 @@ const GraphView = ({
   </>
 )
 
-const selector = createStructuredSelector<ReduxState, Props>({
+const selector = createStructuredSelector<ReduxState, ConnectedProps>({
   activeNodeIds: getActiveNodeIds,
+  connectedHotpotIds: getConnectedHotspotIds,
   connections: getConnections,
   isConnecting: getIsConnecting,
   nodes: getNodes,
