@@ -162,10 +162,12 @@ export const createNode = (schema: NodeSchema, options: any = {}): Node => {
 
   total.left = slots.length
   total.right = signals.length
-  for (const portSchema of schema.ports) {
-    if (portSchema.visibility === 'visible' || portSchema.visibility === 'connectable') {
-      const placement = portSchema.direction === 'input' ? 'left' : 'right'
-      total[placement] += 1
+  if (schema.ports) {
+    for (const portSchema of schema.ports) {
+      if (portSchema.visibility === 'visible' || portSchema.visibility === 'connectable') {
+        const placement = portSchema.direction === 'input' ? 'left' : 'right'
+        total[placement] += 1
+      }
     }
   }
 
